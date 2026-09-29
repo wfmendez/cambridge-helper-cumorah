@@ -1,7 +1,11 @@
 name: Release
 
-# Builds the three things the download page offers and publishes them
-# together, so the site and the binaries can never be from different versions.
+# The downloadable binaries: the Android APK and the Windows zip, published
+# together in one release.
+#
+# The site is not here — it follows main, in ci.yml, because a website should
+# be whatever was last merged and waiting for a tag to fix a typo in it would
+# be silly. A release is for the things people install and then keep.
 #
 # Triggered by a tag: `git tag v1.2.0 && git push origin v1.2.0`. The tag is
 # also where the version number comes from, so it cannot drift from what was
@@ -53,41 +57,6 @@ jobs:
             exit 1
           fi
           echo "Versión $nombre, versionCode $codigo."
-
-  web:
-    needs: version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          # Fijada a propósito: con solo `channel: stable` una versión nueva
-          # de Flutter puede romper la compilación sin que nadie toque nada.
-          flutter-version: 3.47.1
-          cache: true
-      - run: flutter pub get
-
-      # --no-web-resources-cdn: sin esto el motor se descarga CanvasKit y la
-      # tipografía de respaldo desde gstatic.com en cada carga fría, lo que
-      # rompe el arranque sin conexión y manda una petición a Google que esta
-      # app no hace en ningún otro sitio.
-      - run: >
-          flutter build web --release --no-web-resources-cdn
-          --dart-define=APP_VERSION=${{ needs.version.outputs.numero }}
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          # Vercel no trae el SDK de Flutter, así que no compila el proyecto:
-          # compilamos aquí y le entregamos la carpeta ya hecha. La
-          # configuración de cabeceras viaja con ella.
-          cp vercel.json build/web/vercel.json
-          npm install --global vercel@latest
-          vercel deploy build/web --prod --yes --token="$VERCEL_TOKEN"
 
   android:
     needs: version
