@@ -58,8 +58,8 @@ class DescargasScreen extends StatelessWidget {
             child: ContentCard(
               color: theme.colorScheme.surfaceContainerLowest,
               child: Text(
-                'This page already is the app — everything works in the browser, '
-                'offline included, once it has loaded the first time. Installing '
+                'This page already is the app. Practice works offline after '
+                'the first load; AI Writing reviews need internet. Installing '
                 'only buys you an icon, no address bar, and not having to '
                 'remember the address.',
                 style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),

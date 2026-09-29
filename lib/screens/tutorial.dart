@@ -75,8 +75,7 @@ const List<PasoTutorial> pasosTutorial = [
   PasoTutorial(
     title: 'Writing and Speaking',
     body:
-        'The two papers nobody can mark for you. The app does the parts it '
-        'honestly can.',
+        'Practise producing your own English, then reflect on what to improve.',
     escena: Escena.escribir,
     colour: cambridgePurple,
     points: [
@@ -84,21 +83,25 @@ const List<PasoTutorial> pasosTutorial = [
           'count matters: 140–190 words at B2 is not something you judge '
           'by eye.',
       'Your draft saves as you type.',
+      'Writing can give you an AI review with explained corrections. It is '
+          'practice feedback, not an official exam mark.',
       'Speaking gives you a timer, a prompt that shuffles and the phrases '
           'examiners listen for. Say the answers out loud — reading them in '
           'your head trains nothing.',
     ],
   ),
   PasoTutorial(
-    title: 'It is all yours and it stays here',
+    title: 'Your work stays on your device',
     body:
-        'No account, no sign-up, nothing sent anywhere. Everything you '
-        'practise is stored on this phone and works with the plane mode on.',
+        'No account or sign-up. Practice, drafts and recordings stay on your '
+        'device. Optional AI Writing reviews require an internet connection.',
     escena: Escena.privado,
     colour: cambridgeCyan,
     points: [
-      'Uninstalling the app deletes your scores. There is no backup.',
-      'The Listening audio is inside the app: no data needed to play it.',
+      'Only when you request a review, your answer and its task are sent '
+          'through Cíl to Groq or Anthropic. Keep personal details out of practice answers.',
+      'Use the backup option in Progress before uninstalling or changing devices.',
+      'Official Listening audio comes from Cambridge; each paper tells you where to find it.',
       'Nothing here is official. Cíl is a study aid, not Cambridge.',
     ],
   ),

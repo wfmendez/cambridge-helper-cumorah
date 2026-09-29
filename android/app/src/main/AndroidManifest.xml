@@ -1,9 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Lo único que pide la app. Es para grabarte en Speaking y volver a
-         escucharte: la toma se queda en la caché del teléfono y no sale de
-         ahí. No hay permiso de INTERNET, y esa ausencia es la política de
-         privacidad de verdad. -->
+    <!-- Speaking graba en la caché local. INTERNET se usa al solicitar
+         la revisión de Writing; las claves viven en Vercel. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="Cíl"
         android:name="${applicationName}"

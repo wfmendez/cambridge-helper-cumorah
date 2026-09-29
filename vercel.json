@@ -3,7 +3,11 @@
   "installCommand": "echo 'Nothing to install here; scripts/vercel-build.sh fetches the Flutter SDK.'",
   "buildCommand": "bash scripts/vercel-build.sh",
   "outputDirectory": "build/web",
+  "functions": {
+    "api/writing-review.js": { "maxDuration": 60, "includeFiles": "server/**" }
+  },
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

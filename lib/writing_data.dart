@@ -1,8 +1,8 @@
 /// Writing tasks, in the shape Cambridge sets them.
 ///
 /// Written here rather than copied from a paper, but following the real
-/// format: Part 1 is always a compulsory essay with notes you must all cover,
-/// and Part 2 offers a choice of text types, each with its own conventions.
+/// format: Part 1 is a compulsory email at B1 and an essay at B2/C1.
+/// Part 2 offers a choice of text types, each with its own conventions.
 ///
 /// The `checklist` on each task is the part worth reading. Content is a whole
 /// subscale of its own, and it is lost by ignoring a bullet point, not by
@@ -17,7 +17,8 @@ enum TextType {
   email('Email or letter'),
   report('Report'),
   review('Review'),
-  proposal('Proposal');
+  proposal('Proposal'),
+  story('Story');
 
   const TextType(this.label);
   final String label;
@@ -64,14 +65,88 @@ class WritingTask {
   /// It lives on the task rather than in the editor so that the model answers
   /// can be checked against the same numbers the counter uses. Two copies of
   /// a rule is how the two of them end up disagreeing.
-  (int, int) get wordRange => level == ExamLevel.c1 ? (220, 260) : (140, 190);
+  // B1 asks for about 100 words. 90–110 is a practice target, not an exam rule.
+  (int, int) get wordRange => switch (level) {
+    ExamLevel.b1 => (90, 110),
+    ExamLevel.b2 => (140, 190),
+    ExamLevel.c1 => (220, 260),
+  };
 
-  int get minutes => level == ExamLevel.c1 ? 45 : 40;
+  String get wordTarget => level == ExamLevel.b1
+      ? 'about 100 words'
+      : '${wordRange.$1}–${wordRange.$2} words';
+
+  int get minutes => switch (level) {
+    ExamLevel.b1 => part == 1 ? 22 : 23,
+    ExamLevel.b2 => 40,
+    ExamLevel.c1 => 45,
+  };
 
   bool get isCompulsory => part == 1;
 }
 
 final List<WritingTask> writingTasks = [
+  // ── B1 Preliminary ──────────────────────────────────────────────────────
+  const WritingTask(
+    id: 'b1-p1-weekend',
+    level: ExamLevel.b1,
+    part: 1,
+    kind: TextType.email,
+    instructions:
+        'Read this email from your English friend Alex:\n\n'
+        '“I am visiting you on Saturday! Shall we meet at the station at ten? '
+        'What could we do together? Should I bring anything? I can stay until '
+        'Sunday morning. Is that OK?”',
+    question: 'Write your email to Alex, using all the notes.',
+    notes: [
+      'Confirm the meeting time.',
+      'Suggest an activity and say why.',
+      'Tell Alex what to bring.',
+      'Explain why staying overnight is not possible.',
+    ],
+    register: 'Friendly and informal.',
+    checklist: [
+      'Reply to all four points.',
+      'Give a reason for your suggestion.',
+      'Use a greeting and a friendly ending.',
+      'Write about 100 words.',
+    ],
+  ),
+  const WritingTask(
+    id: 'b1-p2-hobby',
+    level: ExamLevel.b1,
+    part: 2,
+    kind: TextType.article,
+    instructions:
+        'You see this notice on an English-language website:\n\n'
+        '“A HOBBY WORTH TRYING. What do you enjoy doing in your free time? '
+        'How did you start? Why would you recommend it to other young people?”',
+    question: 'Write an article answering these questions.',
+    register: 'Friendly and interesting for other young readers.',
+    checklist: [
+      'Name your hobby and explain how you started.',
+      'Give reasons for recommending it.',
+      'Use a title and short paragraphs.',
+      'Write about 100 words.',
+    ],
+  ),
+  const WritingTask(
+    id: 'b1-p2-story',
+    level: ExamLevel.b1,
+    part: 2,
+    kind: TextType.story,
+    instructions:
+        'Your English teacher has asked you to write a story. '
+        'Your story must begin with this sentence:',
+    question: 'When I opened the bag, I knew it was not mine.',
+    register: 'A clear, engaging story for your teacher.',
+    checklist: [
+      'Use the given sentence as your opening.',
+      'Keep the same narrator and use past tenses consistently.',
+      'Give the story a beginning, a problem and an ending.',
+      'Write about 100 words.',
+    ],
+  ),
   // ── B2 First · Part 1, compulsory ─────────────────────────────────────────
   const WritingTask(
     id: 'b2-p1-tech',
@@ -178,6 +253,26 @@ final List<WritingTask> writingTasks = [
     ],
   ),
 
+  const WritingTask(
+    id: 'b2-p2-article',
+    level: ExamLevel.b2,
+    part: 2,
+    kind: TextType.article,
+    instructions:
+        'An English-language student magazine wants articles about '
+        'learning outside the classroom. Describe a useful skill you learnt '
+        'in your free time, explain what made learning it difficult, and give '
+        'advice to someone who wants to try it.',
+    question: 'Write your article for the magazine.',
+    register: 'Lively and conversational, addressing fellow students.',
+    checklist: [
+      'Cover the skill, the difficulty and practical advice.',
+      'Give the article a title that invites the reader in.',
+      'Use a specific example instead of general encouragement.',
+      '140–190 words.',
+    ],
+  ),
+
   // ── C1 Advanced · Part 1, compulsory ──────────────────────────────────────
   const WritingTask(
     id: 'c1-p1-arts',
@@ -252,6 +347,44 @@ final List<WritingTask> writingTasks = [
       'Say precisely what you want. “I would appreciate a full refund” beats '
           '“I am not happy”.',
       'Controlled indignation: “I was disappointed to find that…”',
+      '220–260 words.',
+    ],
+  ),
+  const WritingTask(
+    id: 'c1-p2-review',
+    level: ExamLevel.c1,
+    part: 2,
+    kind: TextType.review,
+    instructions:
+        'An international magazine is publishing reviews of films '
+        'that changed the way viewers think. Review a film you have seen, '
+        'evaluate how effectively it communicates its ideas, and explain '
+        'which readers would benefit most from watching it.',
+    question: 'Write your review.',
+    register: 'Engaging and evaluative, for an adult magazine readership.',
+    checklist: [
+      'Evaluate the film rather than retelling the plot.',
+      'Support your judgement with specific details.',
+      'Recommend it to a defined audience and explain why.',
+      '220–260 words.',
+    ],
+  ),
+  const WritingTask(
+    id: 'c1-p2-report',
+    level: ExamLevel.c1,
+    part: 2,
+    kind: TextType.report,
+    instructions:
+        'You volunteer at a community centre. Its manager has asked '
+        'for a report on the first month of a new language exchange. Evaluate '
+        'what has worked well, identify problems affecting participation, '
+        'and recommend changes for the next month.',
+    question: 'Write your report to the manager.',
+    register: 'Formal, factual and constructive.',
+    checklist: [
+      'Use clear headings and an explicit purpose.',
+      'Distinguish observations from your interpretation.',
+      'Connect each recommendation to a problem you identified.',
       '220–260 words.',
     ],
   ),

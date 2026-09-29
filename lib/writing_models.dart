@@ -85,6 +85,164 @@ const List<Criterion> writingCriteria = [
 ];
 
 const Map<String, WritingModel> writingModels = {
+  'b1-p1-weekend': WritingModel(
+    text:
+        'Hi Alex,\n\n'
+        'Ten on Saturday is perfect. I will meet you outside the station, '
+        'near the ticket office.\n\n'
+        'Why don’t we visit the lake? We can hire bikes and ride around it. '
+        'You love taking photos, so I think you will enjoy the view. Bring '
+        'your camera and a jacket because it sometimes gets cold there. '
+        'We can buy lunch at the little café by the water.\n\n'
+        'Unfortunately, you cannot stay overnight because my cousins are '
+        'using our spare room. Could you take the evening train instead?\n\n'
+        'See you soon!\nChris',
+    why: [
+      'All four notes receive a clear response.',
+      'The suggested activity is supported by a personal reason.',
+      'Short paragraphs and a friendly question make the email easy to follow.',
+    ],
+  ),
+  'b1-p2-hobby': WritingModel(
+    text:
+        'A little garden, a big surprise\n\n'
+        'Do you think gardening is only for people with huge gardens? '
+        'I grow vegetables on our tiny balcony, and I love it.\n\n'
+        'I started last spring when my grandmother gave me some tomato '
+        'seeds. At first, I forgot to water them. Now I check my plants '
+        'every morning before school. Last week we ate our first tomatoes!\n\n'
+        'Gardening helps me relax after studying, and it is exciting to '
+        'watch something grow. You do not need expensive equipment. Try '
+        'putting a few seeds in an old container near a sunny window. '
+        'You might surprise yourself.',
+    why: [
+      'The opening question includes the reader.',
+      'The article covers the hobby, how it began and reasons to try it.',
+      'Past and present tenses have clear jobs; vocabulary stays manageable at B1.',
+    ],
+  ),
+  'b1-p2-story': WritingModel(
+    text:
+        'When I opened the bag, I knew it was not mine. '
+        'Instead of my swimming things, I found a pair of dancing shoes.\n\n'
+        'I had just left the sports centre, so I ran back. At the door, '
+        'a girl was looking worried. She was carrying a blue bag exactly '
+        'like mine.\n\n'
+        '“Are you missing some shoes?” I asked. She laughed and showed '
+        'me my towel. We had picked up the wrong bags in the changing room.\n\n'
+        'We swapped them and introduced ourselves. Now we always check '
+        'our bags carefully, and sometimes we meet for a drink after training.',
+    why: [
+      'The required opening is used exactly.',
+      'The problem is resolved and leads to a simple, satisfying ending.',
+      'Past simple, past continuous and direct speech create a short narrative.',
+    ],
+  ),
+  'b2-p2-article': WritingModel(
+    text:
+        'Dinner without a recipe disaster\n\n'
+        'Ever stared into the fridge and wished you could turn its contents '
+        'into a proper meal? That was me last summer, just before I decided '
+        'to learn to cook.\n\n'
+        'My first challenge was timing. I could cook rice and prepare '
+        'vegetables, but never finish both together. Following online '
+        'videos was frustrating because the presenter always seemed to '
+        'move twice as fast as I did.\n\n'
+        'The solution was surprisingly simple: I read the whole recipe '
+        'first and prepared everything before switching on the cooker. '
+        'I also chose one easy dish and repeated it until I understood '
+        'what each step was doing. A vegetable curry became my speciality.\n\n'
+        'If you want to try cooking, forget impressive dinner parties. '
+        'Start with something you actually like eating, ask someone to '
+        'taste it, and change one thing next time. Keep a notebook of '
+        'what worked. You will make mistakes, but at least most of them '
+        'will be edible!',
+    why: [
+      'An inviting title and direct questions suit a student magazine.',
+      'A concrete difficulty leads to a practical solution.',
+      'The ending gives advice the reader can act on, covering the last task point.',
+    ],
+  ),
+  'c1-p2-review': WritingModel(
+    text:
+        'The Truman Show: looking beyond the screen\n\n'
+        'Imagine discovering that your neighbours, your job and even your '
+        'marriage exist primarily to entertain strangers. That is the '
+        'disturbing premise of The Truman Show, a film whose cheerful '
+        'surface conceals a remarkably sharp examination of control.\n\n'
+        'Jim Carrey plays Truman with a warmth that makes the central '
+        'deception feel personal rather than merely clever. Small '
+        'disruptions in his apparently perfect town gradually expose '
+        'the machinery behind it. The film wisely lets us notice these '
+        'cracks before explaining them, making us participants in '
+        'Truman’s growing uncertainty.\n\n'
+        'Its greatest strength is the contrast between bright, reassuring '
+        'images and the troubling choices they conceal. The television '
+        'audience claims to love Truman while accepting the restrictions '
+        'placed on his life. This contradiction raises questions about '
+        'our own viewing habits without turning the dialogue into a '
+        'lecture. Occasionally, the supporting characters seem too '
+        'obviously artificial, although that weakness partly serves '
+        'the film’s purpose.\n\n'
+        'I would particularly recommend it to readers interested in '
+        'social media and the boundaries between public performance '
+        'and private experience. It was made before today’s platforms '
+        'became familiar, yet its concerns feel immediately recognisable. '
+        'Younger viewers may enjoy the escape story first and discover '
+        'its ethical questions afterwards.\n\n'
+        'This is an accessible, unsettling film that rewards discussion. '
+        'Watch it with someone who disagrees with you about whether '
+        'being constantly watched could ever be worth the comfort '
+        'it appears to offer.',
+    why: [
+      'The review evaluates acting and visual choices instead of summarising the plot.',
+      'A limitation makes the judgement balanced.',
+      'The recommendation identifies an audience and explains its relevance.',
+    ],
+  ),
+  'c1-p2-report': WritingModel(
+    text:
+        'Language exchange: first-month review\n\n'
+        'Purpose\n'
+        'This report evaluates the first four language-exchange sessions '
+        'at the community centre and recommends changes intended to '
+        'improve participation next month. It draws on attendance records '
+        'and informal comments collected after each meeting.\n\n'
+        'Successful features\n'
+        'Participants particularly valued the welcoming atmosphere and '
+        'the opportunity to practise with different partners. Short '
+        'conversation cards helped newcomers begin speaking without '
+        'extensive preparation. Several people returned with friends, '
+        'suggesting that the format has the potential to attract '
+        'a wider audience.\n\n'
+        'Barriers to participation\n'
+        'Attendance was less consistent among people finishing work '
+        'late. Two participants explicitly mentioned the starting time; '
+        'however, further feedback would be needed before attributing '
+        'all absences to scheduling. Uneven language levels presented '
+        'another difficulty. Confident speakers sometimes dominated '
+        'the discussion, leaving beginners with limited opportunities '
+        'to contribute. The room also became noticeably noisy when '
+        'all groups were speaking at once.\n\n'
+        'Recommendations\n'
+        'The centre should trial a later start for two sessions and '
+        'compare attendance before making a permanent change. A short '
+        'registration question about confidence would help volunteers '
+        'form suitable groups, while timed turns could make discussions '
+        'more balanced. Dividing the room into smaller conversation '
+        'areas would reduce competing noise without requiring '
+        'additional equipment.\n\n'
+        'Conclusion\n'
+        'The exchange is worth continuing, provided its accessibility '
+        'improves. These modest adjustments should be reviewed after '
+        'another month, using both attendance figures and a brief '
+        'anonymous questionnaire to assess their effect.',
+    why: [
+      'Headings make the purpose, findings and recommendations easy to locate.',
+      'The writer distinguishes observed facts from a tentative explanation.',
+      'Each practical recommendation responds to an identified problem.',
+    ],
+  ),
   'b2-p1-tech': WritingModel(
     text:
         'It is often said that a classroom teacher is more effective than a '

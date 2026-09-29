@@ -4,7 +4,7 @@
 sibling of **Píle** — *diligence* — the app it was pulled out of: diligence
 gets you to the goal.
 
-Practice for **B2 First** and **C1 Advanced**, with nothing personal attached.
+Practice for **B1 Preliminary**, **B2 First** and **C1 Advanced**.
 
 It is deliberately **not** called anything with *Cambridge* in the name. This
 is an unofficial study aid; Cambridge Assessment English has nothing to do with
@@ -12,7 +12,7 @@ it, and the name should not suggest otherwise.
 
 ## What it has
 
-- **Practice** — 30 exercises that explain *why* the answer is the answer,
+- **Practice** — exercises that explain *why* the answer is the answer,
   grouped by topic, plus a glossary of every exam task type with a worked
   example of each. What a *cloze* is, what a *gapped text* is, what
   *multiple matching* means.
@@ -21,9 +21,10 @@ it, and the name should not suggest otherwise.
   Advanced sample paper from the official handbook. The Listening audio is
   Cambridge's, so the app points at where to download it rather than shipping
   a copy.
-- **Writing** — a paper-white editor with a live word count and a clock. The
-  count is the point: 140–190 words at B2, 220–260 at C1, and almost nobody
-  judges that by eye. The draft saves as you type.
+- **Writing** — 14 original tasks with commented model answers: 3 at B1,
+  6 at B2 and 5 at C1. A paper-white editor, live word count, clock and saved
+  drafts. Optional AI reviews explain corrections, estimate the four writing
+  subscales and suggest next steps without replacing the original answer.
 - **Speaking** — a timer per part, a prompt that shuffles, and the phrases
   examiners are listening for, including ways to open an answer.
 - **The exam** — how each paper works, what it weighs, how it is scored, and
@@ -32,8 +33,12 @@ it, and the name should not suggest otherwise.
 ## What it deliberately does not have
 
 - **Anything personal.** No schedule, no to-do list, no contacts, no payments.
-- **No accounts, no servers.** What you practise is stored on your phone and
-  never leaves it. Works offline.
+- **No accounts.** Practice, scores, recordings and drafts stay on your device
+  and work offline. Only an explicit Writing review sends the selected task
+  and answer through the Cíl API on Vercel to Groq, or Anthropic as a fallback.
+  Reviews need internet. The API does not persist drafts or log their contents;
+  providers process them under their own data policies. AI estimates are not
+  official Cambridge marks.
 - **Not Cambridge's booklets.** The app holds the exam structure and the answer
   keys so it can mark you, not the texts of the papers. The sample papers are
   free to download from Cambridge, and real practice happens on paper anyway.
@@ -50,10 +55,48 @@ installation from unknown sources enabled.
 
 ## Pick your goal
 
-The two chips at the top — **FCE** and **CAE** — set what you are working
+The three chips at the top — **PET**, **FCE** and **CAE** — set what you are working
 towards, and the choice sticks. It is not decorative: aiming at B2 hides the C1
 material, which would only be a distraction until you get there. Aiming at C1
 adds topics like inversion and hedging on top of everything B2 already has.
+
+## Writing review service
+
+`api/writing-review.js` is a Vercel Node function. Configure `GROQ_API_KEY`
+and/or `ANTHROPIC_API_KEY` in Vercel's environment, then redeploy. Keys are
+read only by the function: never put them in Flutter assets or `--dart-define`.
+Groq is tried first; Anthropic is tried once if Groq fails or returns invalid
+feedback. Defaults are `openai/gpt-oss-120b` and `claude-haiku-4-5-20251001`.
+Optional `GROQ_WRITING_MODEL` / `ANTHROPIC_WRITING_MODEL` overrides must support
+the structured-output API used in `server/writing-review.cjs`.
+
+The client posts only `{taskId, text}`. The server obtains the real task from
+`server/writing-tasks.json`, generated from Flutter's data by
+`dart run scripts/export_writing.dart`. CI checks that the catalogue is current.
+Input is limited to 30–800 words, 8,000 characters and a 16 KB JSON body.
+Each provider has a 23-second timeout and a 4,096-token output limit. Responses
+are validated, never cached, and do not expose provider error bodies.
+
+Basic throttling allows one active request and five attempts per ten minutes
+per IP, with sixty attempts per function instance. This in-memory limiter is
+**not a durable global quota**: it resets on cold starts and does not span
+instances. Configure provider spend limits or Vercel WAF rules for a hard
+deployment-wide budget. Origin checks prevent casual cross-site browser use;
+the endpoint remains public for the account-free web and native apps.
+
+Validation:
+
+```bash
+dart run scripts/export_writing.dart --check
+node --test server/*.test.cjs
+flutter analyze
+flutter test
+flutter build web --release --no-web-resources-cdn
+```
+
+Contract references: [Groq structured outputs](https://console.groq.com/docs/structured-outputs),
+[Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs),
+[B1 exam format](https://www.cambridgeenglish.org/exams-and-tests/qualifications/preliminary/format/).
 
 ## Where it came from
 

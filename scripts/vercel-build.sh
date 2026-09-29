@@ -28,6 +28,7 @@ flutter --version
 
 echo "==> Resolving packages"
 flutter pub get
+dart run scripts/export_writing.dart
 
 # El número que se muestra en la página de descargas: el de pubspec con el
 # commit detrás, para que se vea exactamente qué está publicado.

@@ -3,8 +3,8 @@
 ///
 /// This is the English section of Píle, pulled out so it can be handed to
 /// classmates without dragging along a schedule, a to-do list or anything
-/// personal. No account, nothing sent to any server, works offline: what you
-/// practise is stored on your phone and stays there.
+/// personal. Practice and drafts stay local. Optional Writing reviews send
+/// the chosen answer and task to the server only when requested.
 library;
 
 import 'package:flutter/material.dart';

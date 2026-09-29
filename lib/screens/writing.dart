@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,8 @@ import '../state.dart';
 import '../widgets.dart';
 import '../writing_data.dart';
 import '../writing_models.dart';
+import '../writing_review.dart';
+import 'writing_feedback.dart';
 
 /// Pick a task first. An empty editor teaches nothing — the exam is a response
 /// to a prompt, and half the marks live in whether you answered the prompt.
@@ -52,7 +55,10 @@ class WritingBody extends StatelessWidget {
             color: cambridgePurple.withValues(alpha: 0.07),
             border: cambridgePurple.withValues(alpha: 0.3),
             child: Text(
-              level == ExamLevel.c1
+              level == ExamLevel.b1
+                  ? 'Two tasks of about 100 words in 45 minutes. Part 1 is '
+                        'an email; in Part 2 choose an article or a story.'
+                  : level == ExamLevel.c1
                   ? 'Two tasks of 220–260 words in 90 minutes. Part 1 is '
                         'compulsory; Part 2 you choose.'
                   : 'Two tasks of 140–190 words in 80 minutes. Part 1 is '
@@ -135,9 +141,10 @@ class _TaskRow extends StatelessWidget {
 /// 220–260, and almost nobody can judge that by eye — people write 110 words
 /// and think they are finished. The draft saves as you type.
 class WritingEditor extends StatefulWidget {
-  const WritingEditor({super.key, required this.task});
+  const WritingEditor({super.key, required this.task, this.reviewClient});
 
   final WritingTask task;
+  final WritingReviewClient? reviewClient;
 
   @override
   State<WritingEditor> createState() => _WritingEditorState();
@@ -153,6 +160,13 @@ class _WritingEditorState extends State<WritingEditor> {
   final _hojaKey = GlobalKey();
   final _editorKey = GlobalKey();
   final _scrollConsigna = ScrollController();
+  late final WritingReviewClient _reviewClient;
+  late AppState _state;
+  bool _loaded = false;
+  bool _reviewing = false;
+  String? _reviewError;
+  WritingFeedback? _feedback;
+  String? _reviewedText;
 
   (int, int) get _limits => widget.task.wordRange;
 
@@ -161,9 +175,12 @@ class _WritingEditorState extends State<WritingEditor> {
   @override
   void initState() {
     super.initState();
+    _reviewClient = widget.reviewClient ?? WritingReviewClient();
     _text.addListener(_onType);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final saved = AppScope.of(context).writingDraft(widget.task.id);
+      if (!mounted) return;
+      _loaded = true;
+      final saved = _state.writingDraft(widget.task.id);
       if (saved != null && saved.isNotEmpty) {
         _text.text = saved;
         setState(() => _taskOpen = false);
@@ -172,12 +189,64 @@ class _WritingEditorState extends State<WritingEditor> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _state = AppScope.of(context);
+  }
+
+  @override
   void dispose() {
     _tick?.cancel();
     _save?.cancel();
+    // Al volver atrás no perder los últimos dos segundos del borrador.
+    if (_loaded) unawaited(_state.saveDraft(widget.task.id, _text.text));
+    _reviewClient.close();
     _text.dispose();
     _scrollConsigna.dispose();
     super.dispose();
+  }
+
+  Future<void> _review() async {
+    if (_reviewing) return;
+    final submitted = _text.text.trim();
+    if (_feedback != null && _reviewedText == submitted) {
+      _showFeedback(_feedback!, submitted);
+      return;
+    }
+    setState(() {
+      _reviewing = true;
+      _reviewError = null;
+    });
+    _save?.cancel();
+    try {
+      await _state.saveDraft(widget.task.id, _text.text);
+      final feedback = await _reviewClient.review(widget.task.id, submitted);
+      if (!mounted) return;
+      setState(() {
+        _feedback = feedback;
+        _reviewedText = submitted;
+      });
+      _showFeedback(feedback, submitted);
+    } on WritingReviewException catch (error) {
+      if (mounted) setState(() => _reviewError = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _reviewError = 'Could not start the review. Please try again.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _reviewing = false);
+    }
+  }
+
+  void _showFeedback(WritingFeedback feedback, String submitted) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            WritingFeedbackScreen(feedback: feedback, original: submitted),
+      ),
+    );
   }
 
   /// Saved with a two-second breather: typing should not trigger a disk write
@@ -261,8 +330,7 @@ class _WritingEditorState extends State<WritingEditor> {
                   ? null
                   : () => setState(() => _taskOpen = !_taskOpen),
             );
-            final editor = Column(
-              key: _editorKey,
+            final contenidoEditor = Column(
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -286,7 +354,9 @@ class _WritingEditorState extends State<WritingEditor> {
                       Expanded(
                         child: Text(
                           n == 0
-                              ? 'words · aim for $low–$high'
+                              ? 'words · aim for ${t.wordTarget}'
+                              : t.level == ExamLevel.b1
+                              ? 'words · aim for about 100'
                               : (inRange
                                     ? 'words · within range'
                                     : (n < low
@@ -320,6 +390,7 @@ class _WritingEditorState extends State<WritingEditor> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                     child: TextField(
                       controller: _text,
+                      readOnly: _reviewing,
                       expands: true,
                       maxLines: null,
                       minLines: null,
@@ -337,7 +408,80 @@ class _WritingEditorState extends State<WritingEditor> {
                     ),
                   ),
                 ),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: paperRule)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_reviewError != null) ...[
+                        Text(
+                          _reviewError!,
+                          style: const TextStyle(
+                            color: cambridgeRed,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      FilledButton.icon(
+                        onPressed:
+                            _reviewing ||
+                                n < 30 ||
+                                n > 800 ||
+                                _text.text.length > 8000
+                            ? null
+                            : _review,
+                        icon: _reviewing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.fact_check_outlined),
+                        label: Text(
+                          _reviewing
+                              ? 'Reviewing your writing…'
+                              : _feedback != null &&
+                                    _reviewedText == _text.text.trim()
+                              ? 'View my review'
+                              : 'Review my writing',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        n > 800 || _text.text.length > 8000
+                            ? 'For a review, use up to 800 words and 8,000 characters.'
+                            : 'Sends this answer and task to Groq or Anthropic. Internet required. At least 30 words.',
+                        style: const TextStyle(
+                          color: paperGrey,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
+            );
+            // Con teclado o texto ampliado, el formulario puede desplazarse
+            // antes de sacrificar el espacio para escribir.
+            final editor = LayoutBuilder(
+              key: _editorKey,
+              builder: (context, area) => SingleChildScrollView(
+                child: SizedBox(
+                  height: math.max(
+                    area.maxHeight,
+                    MediaQuery.textScalerOf(context).scale(440),
+                  ),
+                  child: contenidoEditor,
+                ),
+              ),
             );
             if (amplio) {
               return Centrado(
@@ -364,7 +508,15 @@ class _WritingEditorState extends State<WritingEditor> {
               ancho: anchoLectura,
               child: Column(
                 children: [
-                  hoja,
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: constraints.maxHeight * 0.48,
+                    ),
+                    child: SingleChildScrollView(
+                      controller: _scrollConsigna,
+                      child: hoja,
+                    ),
+                  ),
                   Expanded(child: editor),
                 ],
               ),
@@ -442,7 +594,7 @@ class _TaskSheet extends StatelessWidget {
             if (task.notes.isNotEmpty) ...[
               const SizedBox(height: 10),
               const Text(
-                'Notes — write about all of these:',
+                'Notes — follow the task instructions:',
                 style: TextStyle(color: paperGrey, fontSize: 13),
               ),
               const SizedBox(height: 4),
