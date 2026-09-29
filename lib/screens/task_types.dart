@@ -23,26 +23,29 @@ class TaskTypesScreen extends StatelessWidget {
       body: Pagina(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          ContentCard(
-            color: cambridgeBlue.withValues(alpha: 0.07),
-            border: cambridgeBlue.withValues(alpha: 0.3),
-            child: Text(
-              'Every Cambridge paper is built from a fixed set of task types, '
-              'and the instructions assume you already know their names. '
-              'Here is each one: what it looks like, what it is really '
-              'testing, a worked example, and what changes at C1.',
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-            ),
-          ),
-          const SizedBox(height: 6),
-          for (final (i, t) in taskTypes.indexed)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: _FichaTarea(
-                tarea: t,
-                color: cambridgePalette[i % cambridgePalette.length],
+          Seccion(
+            explicacion: ContentCard(
+              color: cambridgeBlue.withValues(alpha: 0.07),
+              border: cambridgeBlue.withValues(alpha: 0.3),
+              child: Text(
+                'Every Cambridge paper is built from a fixed set of task types, '
+                'and the instructions assume you already know their names. '
+                'Here is each one: what it looks like, what it is really '
+                'testing, a worked example, and what changes at C1.',
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
               ),
             ),
+            separacionIntro: 6,
+            maxColumnas: 2,
+            rellenoCompacto: const EdgeInsets.only(top: 12),
+            children: [
+              for (final (i, t) in taskTypes.indexed)
+                _FichaTarea(
+                  tarea: t,
+                  color: cambridgePalette[i % cambridgePalette.length],
+                ),
+            ],
+          ),
         ],
       ),
     );

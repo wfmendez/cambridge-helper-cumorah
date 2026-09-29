@@ -46,36 +46,41 @@ class WritingBody extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        ContentCard(
-          color: cambridgePurple.withValues(alpha: 0.07),
-          border: cambridgePurple.withValues(alpha: 0.3),
-          child: Text(
-            level == ExamLevel.c1
-                ? 'Two tasks of 220–260 words in 90 minutes. Part 1 is '
-                      'compulsory; Part 2 you choose.'
-                : 'Two tasks of 140–190 words in 80 minutes. Part 1 is '
-                      'compulsory; Part 2 you choose.',
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+        Centrado(
+          ancho: anchoLectura,
+          child: ContentCard(
+            color: cambridgePurple.withValues(alpha: 0.07),
+            border: cambridgePurple.withValues(alpha: 0.3),
+            child: Text(
+              level == ExamLevel.c1
+                  ? 'Two tasks of 220–260 words in 90 minutes. Part 1 is '
+                        'compulsory; Part 2 you choose.'
+                  : 'Two tasks of 140–190 words in 80 minutes. Part 1 is '
+                        'compulsory; Part 2 you choose.',
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
           ),
         ),
-        TituloMarcado(
-          'Part 1 · compulsory',
-          color: cambridgeReadable(cambridgePurple, theme.colorScheme),
-        ),
-        for (final t in tasks.where((t) => t.isCompulsory))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _TaskRow(task: t),
+        Seccion(
+          titulo: TituloMarcado(
+            'Part 1 · compulsory',
+            color: cambridgeReadable(cambridgePurple, theme.colorScheme),
           ),
-        TituloMarcado(
-          'Part 2 · choose one',
-          color: cambridgeReadable(cambridgePurple, theme.colorScheme),
+          children: [
+            for (final t in tasks.where((t) => t.isCompulsory))
+              _TaskRow(task: t),
+          ],
         ),
-        for (final t in tasks.where((t) => !t.isCompulsory))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _TaskRow(task: t),
+        Seccion(
+          titulo: TituloMarcado(
+            'Part 2 · choose one',
+            color: cambridgeReadable(cambridgePurple, theme.colorScheme),
           ),
+          children: [
+            for (final t in tasks.where((t) => !t.isCompulsory))
+              _TaskRow(task: t),
+          ],
+        ),
       ],
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cil/main.dart';
 import 'package:cil/state.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +37,6 @@ void main() {
           ),
         );
       }
-    });
+    }, skip: !Platform.isWindows);
   }
 }

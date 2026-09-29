@@ -74,6 +74,7 @@ class Rejilla extends StatefulWidget {
     this.maxColumnas = 3,
     this.separacion = 16,
     this.rellenoCompacto = const EdgeInsets.only(bottom: 10),
+    this.espacioFinal = true,
   });
 
   final List<Widget> children;
@@ -81,6 +82,7 @@ class Rejilla extends StatefulWidget {
   final int maxColumnas;
   final double separacion;
   final EdgeInsets rellenoCompacto;
+  final bool espacioFinal;
 
   @override
   State<Rejilla> createState() => _RejillaState();
@@ -114,8 +116,13 @@ class _RejillaState extends State<Rejilla> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final hijo in hijos)
-              Padding(padding: widget.rellenoCompacto, child: hijo),
+            for (var i = 0; i < hijos.length; i++)
+              Padding(
+                padding: i == hijos.length - 1 && !widget.espacioFinal
+                    ? widget.rellenoCompacto.copyWith(bottom: 0)
+                    : widget.rellenoCompacto,
+                child: hijos[i],
+              ),
           ],
         );
       }
@@ -149,7 +156,7 @@ class _RejillaState extends State<Rejilla> {
 /// En ancho, la explicación acompaña a las opciones desde un aparte. Sin
 /// explicación, el título encabeza la rejilla. En compacto no cambia el orden,
 /// ni el espaciado que cada pantalla tenía entre explicación y tarjetas.
-class Seccion extends StatelessWidget {
+class Seccion extends StatefulWidget {
   const Seccion({
     super.key,
     this.titulo,
@@ -170,8 +177,19 @@ class Seccion extends StatelessWidget {
   final EdgeInsets rellenoCompacto;
 
   @override
+  State<Seccion> createState() => _SeccionState();
+}
+
+class _SeccionState extends State<Seccion> {
+  final _rejillaKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
+      final titulo = widget.titulo;
+      final explicacion = widget.explicacion;
+      final children = widget.children;
+      final separacionIntro = widget.separacionIntro;
       final aparte =
           constraints.maxWidth >= corteAmplio &&
           explicacion != null &&
@@ -181,9 +199,10 @@ class Seccion extends StatelessWidget {
         children: [?titulo, ?explicacion],
       );
       final rejilla = Rejilla(
-        maxColumnas: maxColumnas,
-        anchoMinimo: anchoMinimo,
-        rellenoCompacto: rellenoCompacto,
+        key: _rejillaKey,
+        maxColumnas: widget.maxColumnas,
+        anchoMinimo: widget.anchoMinimo,
+        rellenoCompacto: widget.rellenoCompacto,
         children: children,
       );
       if (aparte) {

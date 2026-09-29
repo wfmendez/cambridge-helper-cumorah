@@ -47,6 +47,15 @@ void main() {
       final cardWidth = tester.getSize(find.byType(ContentCard).first).width;
       if (width == 360) expect(cardWidth, width - 32);
       expect(cardWidth, lessThanOrEqualTo(1200));
+      if (width >= 800) {
+        final cards = find.byType(ContentCard);
+        final first = tester.getRect(cards.at(0));
+        final second = tester.getRect(cards.at(1));
+        expect(first.top, second.top);
+        expect(first.height, second.height);
+        expect(first.right, lessThan(second.left));
+        expect(first.width, lessThanOrEqualTo(600));
+      }
       await tester.tap(find.text('Writing'));
       await tester.pumpAndSettle();
       expect(find.text('PART 1 · COMPULSORY'), findsOneWidget);

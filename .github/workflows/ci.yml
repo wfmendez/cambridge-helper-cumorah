@@ -30,3 +30,17 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+
+  mobile-goldens:
+    # Las referencias se capturaron en Windows. El rasterizado del motor en
+    # Linux difiere unos píxeles aun con el mismo código y la misma fuente.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+      - run: flutter test test/movil_test.dart

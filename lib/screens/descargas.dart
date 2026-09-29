@@ -53,65 +53,87 @@ class DescargasScreen extends StatelessWidget {
       body: Pagina(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          ContentCard(
-            color: theme.colorScheme.surfaceContainerLowest,
-            child: Text(
-              'This page already is the app — everything works in the browser, '
-              'offline included, once it has loaded the first time. Installing '
-              'only buys you an icon, no address bar, and not having to '
-              'remember the address.',
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+          Centrado(
+            ancho: anchoLectura,
+            child: ContentCard(
+              color: theme.colorScheme.surfaceContainerLowest,
+              child: Text(
+                'This page already is the app — everything works in the browser, '
+                'offline included, once it has loaded the first time. Installing '
+                'only buys you an icon, no address bar, and not having to '
+                'remember the address.',
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
             ),
           ),
-
-          TituloMarcado(
-            'iPhone and iPad',
-            color: cambridgeReadable(cambridgeBlue, theme.colorScheme),
+          Rejilla(
+            rellenoCompacto: EdgeInsets.zero,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TituloMarcado(
+                    'iPhone and iPad',
+                    color: cambridgeReadable(cambridgeBlue, theme.colorScheme),
+                  ),
+                  ContentCard(
+                    color: cambridgeBlue.withValues(alpha: 0.06),
+                    border: cambridgeBlue.withValues(alpha: 0.3),
+                    child: Text(
+                      'There is nothing to download. Open this page in Safari, press '
+                      'Share, then Add to Home Screen. It gets its own icon and opens '
+                      'without the browser around it.\n\n'
+                      'It has to be Safari — on iPhone, Chrome cannot add to the home '
+                      'screen.',
+                      style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TituloMarcado(
+                    'Android',
+                    color: cambridgeReadable(cambridgeGreen, theme.colorScheme),
+                  ),
+                  _Descarga(
+                    icono: Icons.android_rounded,
+                    color: cambridgeGreen,
+                    titulo: 'Download the APK',
+                    detalle:
+                        'Android will ask you to allow installing from your browser: '
+                        'that is normal for an app that is not from the Play Store.\n\n'
+                        'If you already have it installed, this installs over the top '
+                        'and keeps your progress — you do not need to uninstall first.',
+                    url: _apk,
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TituloMarcado(
+                    'Windows',
+                    color: cambridgeReadable(
+                      cambridgePurple,
+                      theme.colorScheme,
+                    ),
+                  ),
+                  _Descarga(
+                    icono: Icons.desktop_windows_rounded,
+                    color: cambridgePurple,
+                    titulo: 'Download the zip',
+                    detalle:
+                        'Unzip it anywhere and run Cíl.exe. Windows will warn you that '
+                        'it does not recognise the publisher — the app is not signed '
+                        'with a paid certificate. Choose More info, then Run anyway.',
+                    url: _windows,
+                  ),
+                ],
+              ),
+            ],
           ),
-          ContentCard(
-            color: cambridgeBlue.withValues(alpha: 0.06),
-            border: cambridgeBlue.withValues(alpha: 0.3),
-            child: Text(
-              'There is nothing to download. Open this page in Safari, press '
-              'Share, then Add to Home Screen. It gets its own icon and opens '
-              'without the browser around it.\n\n'
-              'It has to be Safari — on iPhone, Chrome cannot add to the home '
-              'screen.',
-              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
-            ),
-          ),
-
-          TituloMarcado(
-            'Android',
-            color: cambridgeReadable(cambridgeGreen, theme.colorScheme),
-          ),
-          _Descarga(
-            icono: Icons.android_rounded,
-            color: cambridgeGreen,
-            titulo: 'Download the APK',
-            detalle:
-                'Android will ask you to allow installing from your browser: '
-                'that is normal for an app that is not from the Play Store.\n\n'
-                'If you already have it installed, this installs over the top '
-                'and keeps your progress — you do not need to uninstall first.',
-            url: _apk,
-          ),
-
-          TituloMarcado(
-            'Windows',
-            color: cambridgeReadable(cambridgePurple, theme.colorScheme),
-          ),
-          _Descarga(
-            icono: Icons.desktop_windows_rounded,
-            color: cambridgePurple,
-            titulo: 'Download the zip',
-            detalle:
-                'Unzip it anywhere and run Cíl.exe. Windows will warn you that '
-                'it does not recognise the publisher — the app is not signed '
-                'with a paid certificate. Choose More info, then Run anyway.',
-            url: _windows,
-          ),
-
           const SizedBox(height: 26),
           Center(
             child: TextButton.icon(

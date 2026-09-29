@@ -101,42 +101,35 @@ class _Listado extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
-        for (final s in sets) ...[
-          TituloMarcado(
-            s.name,
-            color: cambridgeReadable(colourFor(s.level), theme.colorScheme),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 10, right: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    s.blurb,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.45,
+        for (final s in sets)
+          Seccion(
+            titulo: TituloMarcado(
+              s.name,
+              color: cambridgeReadable(colourFor(s.level), theme.colorScheme),
+            ),
+            explicacion: Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 10, right: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      s.blurb,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Pill('${s.entries.length}', color: theme.colorScheme.outline),
-              ],
-            ),
-          ),
-          ContentCard(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            child: Column(
-              children: [
-                for (var i = 0; i < s.entries.length; i++) ...[
-                  if (i > 0) const Divider(height: 1),
-                  _Fila(entry: s.entries[i]),
+                  const SizedBox(width: 10),
+                  Pill('${s.entries.length}', color: theme.colorScheme.outline),
                 ],
-              ],
+              ),
             ),
+            maxColumnas: 1,
+            rellenoCompacto: EdgeInsets.zero,
+            children: [_Entradas(entries: s.entries)],
           ),
-        ],
       ],
     );
   }
@@ -172,21 +165,45 @@ class _Resultados extends StatelessWidget {
 
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-      children: [
-        ContentCard(
+      children: [_Entradas(entries: hallados)],
+    );
+  }
+}
+
+/// En móvil conserva la tarjeta con divisores; en ancho cada entrada se puede
+/// recorrer con la vista como una ficha completa, sin separar su ejemplo.
+class _Entradas extends StatelessWidget {
+  const _Entradas({required this.entries});
+  final List<VocabEntry> entries;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      if (constraints.maxWidth < corteMedio) {
+        return ContentCard(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           child: Column(
             children: [
-              for (var i = 0; i < hallados.length; i++) ...[
+              for (var i = 0; i < entries.length; i++) ...[
                 if (i > 0) const Divider(height: 1),
-                _Fila(entry: hallados[i]),
+                _Fila(entry: entries[i]),
               ],
             ],
           ),
-        ),
-      ],
-    );
-  }
+        );
+      }
+      return Rejilla(
+        maxColumnas: 2,
+        children: [
+          for (final e in entries)
+            ContentCard(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              child: _Fila(entry: e),
+            ),
+        ],
+      );
+    },
+  );
 }
 
 class _Fila extends StatelessWidget {

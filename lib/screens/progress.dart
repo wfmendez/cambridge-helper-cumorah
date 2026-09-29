@@ -45,24 +45,27 @@ class ProgressTab extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        _Resumen(intentos: intentos, temas: temas),
-        if (porPaper.isNotEmpty) ...[
-          const TituloMarcado('Mock tests'),
-          for (final entrada in porPaper.entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _TarjetaPaper(
-                paperId: entrada.key,
-                intentos: entrada.value,
-              ),
-            ),
-        ],
+        Centrado(
+          ancho: anchoLectura,
+          child: _Resumen(intentos: intentos, temas: temas),
+        ),
+        if (porPaper.isNotEmpty)
+          Seccion(
+            titulo: const TituloMarcado('Mock tests'),
+            children: [
+              for (final entrada in porPaper.entries)
+                _TarjetaPaper(paperId: entrada.key, intentos: entrada.value),
+            ],
+          ),
         if (temas.isNotEmpty) ...[
           const TituloMarcado('Practice by topic'),
-          _Temas(temas: temas),
+          Centrado(
+            ancho: anchoLectura,
+            child: _Temas(temas: temas),
+          ),
         ],
         const TituloMarcado('Your data'),
-        const _Borrar(),
+        Centrado(ancho: anchoLectura, child: const _Borrar()),
       ],
     );
   }

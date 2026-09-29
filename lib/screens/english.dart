@@ -287,69 +287,35 @@ class _Practica extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        // Understand the tasks first, then drill them: Cambridge's own
-        // instructions assume terms that nobody ever explains.
-        ContentCard(
-          onTap: () => Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => const TaskTypesScreen())),
-          border: cambridgeRed.withValues(alpha: 0.35),
-          child: Row(
-            children: [
-              Icon(
-                Icons.help_outline_rounded,
-                color: cambridgeReadable(cambridgeRed, theme.colorScheme),
+        Rejilla(
+          espacioFinal: false,
+          children: [
+            // Understand the tasks first, then drill them: Cambridge's own
+            // instructions assume terms that nobody ever explains.
+            ContentCard(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const TaskTypesScreen()),
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'How the tasks work',
-                      style: theme.textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Start here: what a cloze or a gapped text actually is, '
-                      'with a worked example of each',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Builder(
-          builder: (context) {
-            final morado = cambridgeReadable(
-              cambridgePurple,
-              theme.colorScheme,
-            );
-            final cuantas = vocabForGoal(state.goal)
-                .fold<int>(0, (n, s) => n + s.entries.length);
-            return ContentCard(
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => const VocabScreen())),
-              border: cambridgePurple.withValues(alpha: 0.35),
+              border: cambridgeRed.withValues(alpha: 0.35),
               child: Row(
                 children: [
-                  Icon(Icons.menu_book_rounded, color: morado),
+                  Icon(
+                    Icons.help_outline_rounded,
+                    color: cambridgeReadable(cambridgeRed, theme.colorScheme),
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Word bank', style: theme.textTheme.titleSmall),
+                        Text(
+                          'How the tasks work',
+                          style: theme.textTheme.titleSmall,
+                        ),
                         const SizedBox(height: 2),
                         Text(
-                          '$cuantas entries: the prepositions, families and '
-                          'fixed phrases the paper keeps testing',
+                          'Start here: what a cloze or a gapped text actually is, '
+                          'with a worked example of each',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             height: 1.35,
@@ -361,144 +327,185 @@ class _Practica extends StatelessWidget {
                   const Icon(Icons.chevron_right_rounded),
                 ],
               ),
-            );
-          },
-        ),
-        // El mazo de fallos va antes que nada: si tienes algo pendiente de
-        // repasar, es mejor uso de diez minutos que cualquier tanda nueva.
-        if (state.mistakes.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Builder(
-            builder: (context) {
-              final mazo = exercisesByIds(state.mistakes);
-              final oro = cambridgeReadable(cilGold, theme.colorScheme);
-              return ContentCard(
-                onTap: () => _abrirSesion(context, mazo, 'Redo your mistakes'),
-                color: cilGold.withValues(alpha: 0.09),
-                border: cilGold.withValues(alpha: 0.45),
-                child: Row(
-                  children: [
-                    Icon(Icons.replay_rounded, color: oro),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Redo your mistakes',
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            mazo.length == 1
-                                ? 'One question waiting. Get it right and it '
-                                      'leaves the deck.'
-                                : '${mazo.length} questions waiting. Each one '
-                                      'leaves the deck when you get it right.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              height: 1.35,
+            ),
+            Builder(
+              builder: (context) {
+                final morado = cambridgeReadable(
+                  cambridgePurple,
+                  theme.colorScheme,
+                );
+                final cuantas = vocabForGoal(state.goal)
+                    .fold<int>(0, (n, s) => n + s.entries.length);
+                return ContentCard(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const VocabScreen()),
+                  ),
+                  border: cambridgePurple.withValues(alpha: 0.35),
+                  child: Row(
+                    children: [
+                      Icon(Icons.menu_book_rounded, color: morado),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Word bank',
+                              style: theme.textTheme.titleSmall,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right_rounded),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-        const SizedBox(height: 10),
-        ContentCard(
-          onTap: () => _abrirSesion(
-            context,
-            exercisesForGoal(state.goal),
-            'Mixed practice',
-          ),
-          color: cambridgeBlue.withValues(alpha: 0.07),
-          border: cambridgeBlue.withValues(alpha: 0.35),
-          child: Row(
-            children: [
-              Icon(
-                Icons.shuffle_rounded,
-                color: cambridgeReadable(cambridgeBlue, theme.colorScheme),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Mixed practice', style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 2),
-                    Text(
-                      'All ${exercisesForGoal(state.goal).length} items, shuffled',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
-        if (flojo != null) ...[
-          const SizedBox(height: 10),
-          Builder(
-            builder: (context) {
-              final t = topics.firstWhere((t) => t.id == flojo);
-              final tasa = state.accuracyFor(flojo) ?? 0;
-              return ContentCard(
-                onTap: () => _abrirSesion(
-                  context,
-                  exercisesFor(flojo, goal: state.goal),
-                  t.name,
-                ),
-                border: theme.colorScheme.error.withValues(alpha: 0.35),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.trending_down_rounded,
-                      color: theme.colorScheme.error,
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Weakest area: ${t.name}',
-                            style: theme.textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${(tasa * 100).round()}% correct so far',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            const SizedBox(height: 2),
+                            Text(
+                              '$cuantas entries: the prepositions, families and '
+                              'fixed phrases the paper keeps testing',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                height: 1.35,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const Icon(Icons.chevron_right_rounded),
+                    ],
+                  ),
+                );
+              },
+            ),
+            if (state.mistakes.isNotEmpty)
+              Builder(
+                builder: (context) {
+                  final mazo = exercisesByIds(state.mistakes);
+                  final oro = cambridgeReadable(cilGold, theme.colorScheme);
+                  return ContentCard(
+                    onTap: () =>
+                        _abrirSesion(context, mazo, 'Redo your mistakes'),
+                    color: cilGold.withValues(alpha: 0.09),
+                    border: cilGold.withValues(alpha: 0.45),
+                    child: Row(
+                      children: [
+                        Icon(Icons.replay_rounded, color: oro),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Redo your mistakes',
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                mazo.length == 1
+                                    ? 'One question waiting. Get it right and it '
+                                          'leaves the deck.'
+                                    : '${mazo.length} questions waiting. Each one '
+                                          'leaves the deck when you get it right.',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
                     ),
-                    const Icon(Icons.chevron_right_rounded),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-        TituloMarcado(
-          'By topic',
-          color: cambridgeReadable(cambridgeRed, theme.colorScheme),
+                  );
+                },
+              ),
+            ContentCard(
+              onTap: () => _abrirSesion(
+                context,
+                exercisesForGoal(state.goal),
+                'Mixed practice',
+              ),
+              color: cambridgeBlue.withValues(alpha: 0.07),
+              border: cambridgeBlue.withValues(alpha: 0.35),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.shuffle_rounded,
+                    color: cambridgeReadable(cambridgeBlue, theme.colorScheme),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mixed practice',
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'All ${exercisesForGoal(state.goal).length} items, shuffled',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+            ),
+            if (flojo != null)
+              Builder(
+                builder: (context) {
+                  final t = topics.firstWhere((t) => t.id == flojo);
+                  final tasa = state.accuracyFor(flojo) ?? 0;
+                  return ContentCard(
+                    onTap: () => _abrirSesion(
+                      context,
+                      exercisesFor(flojo, goal: state.goal),
+                      t.name,
+                    ),
+                    border: theme.colorScheme.error.withValues(alpha: 0.35),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.trending_down_rounded,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Weakest area: ${t.name}',
+                                style: theme.textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${(tasa * 100).round()}% correct so far',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right_rounded),
+                      ],
+                    ),
+                  );
+                },
+              ),
+          ],
         ),
-        for (final t in topicsForGoal(state.goal))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _TopicRow(topic: t, state: state),
+        Seccion(
+          titulo: TituloMarcado(
+            'By topic',
+            color: cambridgeReadable(cambridgeRed, theme.colorScheme),
           ),
+          children: [
+            for (final t in topicsForGoal(state.goal))
+              _TopicRow(topic: t, state: state),
+          ],
+        ),
       ],
     );
   }
@@ -887,143 +894,152 @@ class _Simulacros extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
-        ContentCard(
-          color: theme.colorScheme.surfaceContainerLowest,
-          child: Text(
-            'Do the paper on paper, timed, exactly as in the real exam. Then '
-            'type your answers in here and it marks them instantly, part by '
-            'part, so you can see where the marks went.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.45,
+        Centrado(
+          ancho: anchoLectura,
+          child: ContentCard(
+            color: theme.colorScheme.surfaceContainerLowest,
+            child: Text(
+              'Do the paper on paper, timed, exactly as in the real exam. Then '
+              'type your answers in here and it marks them instantly, part by '
+              'part, so you can see where the marks went.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
           ),
         ),
-        // Las dos categorías van en verde y en rojo: es la distinción que más
-        // importa de esta pantalla — si puedes sentarte a hacerlo aquí o
-        // necesitas el PDF de Cambridge — y en gris se perdía.
-        TituloMarcado(
-          'Written for Cíl · text included',
-          color: cambridgeReadable(cambridgeGreen, theme.colorScheme),
-        ),
-        ContentCard(
-          color: cambridgeGreen.withValues(alpha: 0.06),
-          border: cambridgeGreen.withValues(alpha: 0.3),
-          child: Text(
-            'These are ours, so the texts are in the app: you can sit them on '
-            'the phone with nothing else open. Same shapes and same marks as '
-            'the real thing, but not Cambridge material.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.45,
+        Seccion(
+          titulo: // Las dos categorías van en verde y en rojo: es la distinción que más
+              // importa de esta pantalla — si puedes sentarte a hacerlo aquí o
+              // necesitas el PDF de Cambridge — y en gris se perdía.
+              TituloMarcado(
+                'Written for Cíl · text included',
+                color: cambridgeReadable(cambridgeGreen, theme.colorScheme),
+              ),
+          explicacion: ContentCard(
+            color: cambridgeGreen.withValues(alpha: 0.06),
+            border: cambridgeGreen.withValues(alpha: 0.3),
+            child: Text(
+              'These are ours, so the texts are in the app: you can sit them on '
+              'the phone with nothing else open. Same shapes and same marks as '
+              'the real thing, but not Cambridge material.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
           ),
+          separacionIntro: 10,
+          maxColumnas: 2,
+          children: [
+            for (final paper in cambridgePapers.where(
+              (p) => p.source == PaperSource.cil,
+            ))
+              _FilaPrueba(paper: paper, state: state),
+          ],
         ),
-        const SizedBox(height: 10),
-        for (final paper in cambridgePapers.where(
-          (p) => p.source == PaperSource.cil,
-        ))
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _FilaPrueba(paper: paper, state: state),
+        Seccion(
+          titulo: TituloMarcado(
+            'Official Cambridge papers · PDF needed',
+            color: cambridgeReadable(cambridgeRed, theme.colorScheme),
           ),
-        TituloMarcado(
-          'Official Cambridge papers · PDF needed',
-          color: cambridgeReadable(cambridgeRed, theme.colorScheme),
-        ),
-        ContentCard(
-          color: cambridgeRed.withValues(alpha: 0.06),
-          border: cambridgeRed.withValues(alpha: 0.3),
-          child: Text(
-            'These follow Cambridge\'s own sample papers, so the texts are not '
-            'here — they are free to download from Cambridge, and each paper '
-            'says which file it is and where to get it. The app holds the '
-            'answer key, so it still marks you.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              height: 1.45,
+          explicacion: ContentCard(
+            color: cambridgeRed.withValues(alpha: 0.06),
+            border: cambridgeRed.withValues(alpha: 0.3),
+            child: Text(
+              'These follow Cambridge\'s own sample papers, so the texts are not '
+              'here — they are free to download from Cambridge, and each paper '
+              'says which file it is and where to get it. The app holds the '
+              'answer key, so it still marks you.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.45,
+              ),
             ),
           ),
         ),
         const SizedBox(height: 4),
-        for (final level in ExamLevel.values) ...[
-          TituloMarcado(
-            switch (level) {
-              ExamLevel.b1 => 'B1 Preliminary · sample paper',
-              ExamLevel.b2 => 'B2 First · Sample paper 2',
-              ExamLevel.c1 => 'C1 Advanced · sample paper',
-            },
-            // El mismo color que ya lleva la etiqueta de nivel a la derecha.
-            color: cambridgeReadable(switch (level) {
-              ExamLevel.b1 => cambridgeGreen,
-              ExamLevel.b2 => cambridgeBlue,
-              ExamLevel.c1 => cambridgePurple,
-            }, theme.colorScheme),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: switch (level) {
-                  ExamLevel.b1 => cambridgeGreen,
-                  ExamLevel.b2 => cambridgeBlue,
-                  ExamLevel.c1 => cambridgePurple,
-                }.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                level.chip,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: cambridgeReadable(switch (level) {
+        for (final level in ExamLevel.values)
+          Seccion(
+            titulo: TituloMarcado(
+              switch (level) {
+                ExamLevel.b1 => 'B1 Preliminary · sample paper',
+                ExamLevel.b2 => 'B2 First · Sample paper 2',
+                ExamLevel.c1 => 'C1 Advanced · sample paper',
+              },
+              // El mismo color que ya lleva la etiqueta de nivel a la derecha.
+              color: cambridgeReadable(switch (level) {
+                ExamLevel.b1 => cambridgeGreen,
+                ExamLevel.b2 => cambridgeBlue,
+                ExamLevel.c1 => cambridgePurple,
+              }, theme.colorScheme),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: switch (level) {
                     ExamLevel.b1 => cambridgeGreen,
                     ExamLevel.b2 => cambridgeBlue,
                     ExamLevel.c1 => cambridgePurple,
-                  }, theme.colorScheme),
-                  fontWeight: FontWeight.w700,
+                  }.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  level.chip,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: cambridgeReadable(switch (level) {
+                      ExamLevel.b1 => cambridgeGreen,
+                      ExamLevel.b2 => cambridgeBlue,
+                      ExamLevel.c1 => cambridgePurple,
+                    }, theme.colorScheme),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
+            explicacion: switch (level) {
+              ExamLevel.b1 => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ContentCard(
+                  color: cambridgeGreen.withValues(alpha: 0.06),
+                  border: cambridgeGreen.withValues(alpha: 0.3),
+                  child: Text(
+                    'A shorter exam with a different shape: Reading is one paper '
+                    'of six parts and there is no separate Use of English. Score '
+                    '160 here and Cambridge issues a B2 certificate anyway.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+              ExamLevel.c1 => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ContentCard(
+                  color: cambridgePurple.withValues(alpha: 0.06),
+                  border: cambridgePurple.withValues(alpha: 0.3),
+                  child: Text(
+                    'Where you are heading. Same marking, harder paper: eight '
+                    'parts instead of seven and 56 questions instead of 52. '
+                    'Worth one attempt after Monday, just to see the gap.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ),
+              _ => null,
+            },
+            maxColumnas: 2,
+            children: [
+              for (final paper in papersFor(
+                level,
+              ).where((p) => p.source == PaperSource.official))
+                _FilaPrueba(paper: paper, state: state),
+            ],
           ),
-          if (level == ExamLevel.b1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ContentCard(
-                color: cambridgeGreen.withValues(alpha: 0.06),
-                border: cambridgeGreen.withValues(alpha: 0.3),
-                child: Text(
-                  'A shorter exam with a different shape: Reading is one paper '
-                  'of six parts and there is no separate Use of English. Score '
-                  '160 here and Cambridge issues a B2 certificate anyway.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-            ),
-          if (level == ExamLevel.c1)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: ContentCard(
-                color: cambridgePurple.withValues(alpha: 0.06),
-                border: cambridgePurple.withValues(alpha: 0.3),
-                child: Text(
-                  'Where you are heading. Same marking, harder paper: eight '
-                  'parts instead of seven and 56 questions instead of 52. '
-                  'Worth one attempt after Monday, just to see the gap.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-            ),
-          for (final paper in papersFor(
-            level,
-          ).where((p) => p.source == PaperSource.official))
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _FilaPrueba(paper: paper, state: state),
-            ),
-        ],
       ],
     );
   }
