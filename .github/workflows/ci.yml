@@ -47,7 +47,9 @@ jobs:
         # exactamente qué está publicado, y no una versión que aún no existe.
         run: |
           declarada=$(grep -m1 '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//')
-          echo "numero=${declarada%%+*} (${GITHUB_SHA::7})" >> "$GITHUB_OUTPUT"
+          # Sin espacios ni paréntesis: esto acaba dentro de una orden de
+          # shell, y un paréntesis ahí la rompe.
+          echo "numero=${declarada%%+*}+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       # --no-web-resources-cdn: sin esto el motor se descarga CanvasKit y la
       # tipografía de respaldo desde gstatic.com en cada carga fría, lo que
@@ -55,7 +57,7 @@ jobs:
       # app no hace en ningún otro sitio.
       - run: >
           flutter build web --release --no-web-resources-cdn
-          --dart-define=APP_VERSION=${{ steps.version.outputs.numero }}
+          --dart-define=APP_VERSION="${{ steps.version.outputs.numero }}"
 
       - name: Deploy to Vercel
         env:
