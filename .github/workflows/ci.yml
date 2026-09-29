@@ -1,8 +1,12 @@
-name: CI and site
+name: CI
 
-# Checks on everything, and — when main moves and those checks pass — the site
-# goes out. The site follows main; the downloadable binaries are cut from tags
-# in release.yml.
+# Analysis and tests on every push. Cheap, and the only thing standing between
+# a typo and a broken release.
+#
+# The site is not deployed here. Vercel builds it itself from the repository —
+# see vercel.json and scripts/vercel-build.sh — which keeps the deployment
+# working without an API token living in this repository's secrets. The
+# downloadable binaries are cut from tags in release.yml.
 on:
   push:
     branches: [main]
@@ -19,64 +23,10 @@ jobs:
           channel: stable
           # Fijada a propósito: con solo `channel: stable` una versión nueva
           # de Flutter puede romper la compilación sin que nadie toque nada.
+          # Es la misma que usa scripts/vercel-build.sh.
           flutter-version: 3.47.1
           cache: true
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
-
-  site:
-    # Nunca sale a producción algo que no pasó las pruebas, y solo desde main:
-    # una pull request se comprueba pero no se despliega.
-    needs: check
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          flutter-version: 3.47.1
-          cache: true
-      - run: flutter pub get
-
-      - id: version
-        # El sitio sigue a main, donde no hay tag, así que el número sale de
-        # pubspec con el commit pegado detrás: en la página de descargas se ve
-        # exactamente qué está publicado, y no una versión que aún no existe.
-        run: |
-          declarada=$(grep -m1 '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//')
-          # Sin espacios ni paréntesis: esto acaba dentro de una orden de
-          # shell, y un paréntesis ahí la rompe.
-          echo "numero=${declarada%%+*}+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      # --no-web-resources-cdn: sin esto el motor se descarga CanvasKit y la
-      # tipografía de respaldo desde gstatic.com en cada carga fría, lo que
-      # rompe el arranque sin conexión y manda una petición a Google que esta
-      # app no hace en ningún otro sitio.
-      - run: >
-          flutter build web --release --no-web-resources-cdn
-          --dart-define=APP_VERSION="${{ steps.version.outputs.numero }}"
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          # Sin esto el fallo llega como "--token is missing a value" desde el
-          # CLI, que no dice qué hay que arreglar.
-          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
-            echo "Faltan secretos de Vercel en el repositorio." >&2
-            echo "Hacen falta VERCEL_TOKEN, VERCEL_ORG_ID y VERCEL_PROJECT_ID." >&2
-            echo "Los dos ids salen de .vercel/project.json tras 'vercel link'." >&2
-            exit 1
-          fi
-
-          # Vercel no trae el SDK de Flutter, así que no compila el proyecto:
-          # compilamos aquí y le entregamos la carpeta ya hecha. La
-          # configuración de cabeceras viaja con ella.
-          cp vercel.json build/web/vercel.json
-          npm install --global vercel@latest
-          vercel deploy build/web --prod --yes --token="$VERCEL_TOKEN"

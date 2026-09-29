@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "echo 'Nothing to install here; scripts/vercel-build.sh fetches the Flutter SDK.'",
+  "buildCommand": "bash scripts/vercel-build.sh",
+  "outputDirectory": "build/web",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
