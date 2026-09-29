@@ -883,11 +883,136 @@ class _Opcion extends StatelessWidget {
 
 // ── Simulacros ───────────────────────────────────────────────────────────────
 
-class _Simulacros extends StatelessWidget {
+class _Simulacros extends StatefulWidget {
   const _Simulacros();
 
   @override
-  Widget build(BuildContext context) {
+  State<_Simulacros> createState() => _SimulacrosState();
+}
+
+class _SimulacrosState extends State<_Simulacros> {
+  ExamLevel? _meta;
+  ExamLevel _nivel = ExamLevel.b2;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final meta = AppScope.of(context).goal;
+    // Mirar otro examen no cambia la meta de toda la app. Elegir una meta
+    // nueva sí actualiza qué muestra este catálogo al volver a él.
+    if (_meta != meta) {
+      _meta = meta;
+      _nivel = meta;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => constraints.maxWidth >= corteMedio
+        ? _amplio(context)
+        : _compacto(context),
+  );
+
+  Widget _amplio(BuildContext context) {
+    final state = AppScope.of(context);
+    final theme = Theme.of(context);
+    final verde = cambridgeReadable(cambridgeGreen, theme.colorScheme);
+    final rojo = cambridgeReadable(cambridgeRed, theme.colorScheme);
+    final nivelColor = cambridgeReadable(colourFor(_nivel), theme.colorScheme);
+
+    // Los dos grupos comparten el mismo borde izquierdo y la misma rejilla.
+    // El aviso del cuadernillo pertenece a los oficiales; no es otro bloque
+    // flotante entre niveles. En móvil se conserva la lista de siempre.
+    return Pagina(
+      padding: const EdgeInsets.fromLTRB(16, 24, 16, 40),
+      children: [
+        Text('Mock tests', style: theme.textTheme.headlineMedium),
+        const SizedBox(height: 8),
+        _NotaSimulacro(
+          'Choose a paper, set aside the time, and work through it as you '
+          'would in the exam.',
+        ),
+        const SizedBox(height: 32),
+        _CabeceraSimulacros(
+          titulo: 'Written for Cíl',
+          etiqueta: 'Text included',
+          icono: Icons.check_circle_outline_rounded,
+          color: verde,
+        ),
+        const SizedBox(height: 8),
+        const _NotaSimulacro(
+          'Everything you need is in the app. Original practice papers '
+          'with the format and marking of the exam.',
+        ),
+        const SizedBox(height: 16),
+        Rejilla(
+          maxColumnas: 2,
+          children: [
+            for (final paper in cambridgePapers.where(
+              (p) => p.source == PaperSource.cil,
+            ))
+              _FilaPrueba(paper: paper, state: state),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Divider(height: 1),
+        const SizedBox(height: 32),
+        _CabeceraSimulacros(
+          titulo: 'Official Cambridge papers',
+          etiqueta: 'PDF needed',
+          icono: Icons.picture_as_pdf_outlined,
+          color: rojo,
+        ),
+        const SizedBox(height: 8),
+        const _NotaSimulacro(
+          'Work from the free Cambridge sample booklet, then enter your '
+          'answers here. Each paper tells you which file to download.',
+        ),
+        const SizedBox(height: 20),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final level in ExamLevel.values)
+              ChoiceChip(
+                label: Text(level.name),
+                selected: _nivel == level,
+                onSelected: (_) => setState(() => _nivel = level),
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          _nivel == ExamLevel.b2 ? 'Sample paper 2' : 'Sample paper',
+          style: theme.textTheme.titleSmall?.copyWith(color: nivelColor),
+        ),
+        const SizedBox(height: 6),
+        _NotaSimulacro(switch (_nivel) {
+          ExamLevel.b1 =>
+            'A shorter exam: Reading has six parts, with no separate '
+                'Use of English paper.',
+          ExamLevel.b2 =>
+            'Reading and Use of English, Listening, Writing and Speaking '
+                'for B2 First.',
+          ExamLevel.c1 =>
+            'A more demanding exam: Reading and Use of English has '
+                'eight parts and 56 questions.',
+        }),
+        const SizedBox(height: 16),
+        Rejilla(
+          maxColumnas: 2,
+          children: [
+            for (final paper in papersFor(
+              _nivel,
+            ).where((p) => p.source == PaperSource.official))
+              _FilaPrueba(paper: paper, state: state),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _compacto(BuildContext context) {
     final state = AppScope.of(context);
     final theme = Theme.of(context);
 
@@ -1043,6 +1168,53 @@ class _Simulacros extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Las explicaciones se leen en renglones cortos, alineadas con las tarjetas.
+class _NotaSimulacro extends StatelessWidget {
+  const _NotaSimulacro(this.texto);
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: anchoLectura),
+      child: Text(
+        texto,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          height: 1.5,
+        ),
+      ),
+    ),
+  );
+}
+
+class _CabeceraSimulacros extends StatelessWidget {
+  const _CabeceraSimulacros({
+    required this.titulo,
+    required this.etiqueta,
+    required this.icono,
+    required this.color,
+  });
+
+  final String titulo;
+  final String etiqueta;
+  final IconData icono;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 12,
+    runSpacing: 8,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Text(titulo, style: Theme.of(context).textTheme.titleLarge),
+      Pill(etiqueta, color: color, icon: icono),
+    ],
+  );
 }
 
 class _FilaPrueba extends StatelessWidget {

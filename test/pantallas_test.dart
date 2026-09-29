@@ -185,6 +185,64 @@ void main() {
     });
   }
 
+  testWidgets('wide mocks align their groups and show one exam at a time', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final state = await AppState.open();
+    await tester.pumpWidget(CilApp(state: state));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mock test'));
+    await tester.pumpAndSettle();
+
+    final b2 = find.widgetWithText(ChoiceChip, ExamLevel.b2.name);
+    expect(tester.widget<ChoiceChip>(b2).selected, isTrue);
+    expect(find.byType(ContentCard), findsNWidgets(6));
+    final left = tester.getTopLeft(find.byType(ContentCard).first).dx;
+    expect(tester.getTopLeft(find.text('Written for Cíl')).dx, left);
+    expect(tester.getTopLeft(find.text('Official Cambridge papers')).dx, left);
+
+    final b1 = find.widgetWithText(ChoiceChip, ExamLevel.b1.name);
+    await tester.ensureVisible(b1);
+    await tester.tap(b1);
+    await tester.pumpAndSettle();
+    expect(find.text('Reading'), findsOneWidget);
+    expect(state.goal, ExamLevel.b2);
+
+    // La elección local sobrevive al salir del destino y al cambiar de ancho.
+    await tester.tap(find.text('Practice'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mock test'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
+    tester.view.physicalSize = const Size(800, 1000);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(b1);
+    expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
+    expect(tester.takeException(), isNull);
+    tester.view.physicalSize = const Size(360, 1000);
+    await tester.pumpAndSettle();
+    expect(find.byType(ChoiceChip), findsNothing);
+    tester.view.physicalSize = const Size(1920, 1080);
+    await tester.pumpAndSettle();
+    expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
+
+    await state.setGoal(ExamLevel.c1);
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<ChoiceChip>(
+            find.widgetWithText(ChoiceChip, ExamLevel.c1.name),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(find.byType(ContentCard), findsNWidgets(6));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('official answers use columns and keep their values on resize', (
     tester,
   ) async {
@@ -198,6 +256,10 @@ void main() {
     final paper = cambridgePapers.firstWhere(
       (p) => p.source == PaperSource.official && p.selfMarked,
     );
+    final exam = find.widgetWithText(ChoiceChip, paper.level.name);
+    await tester.ensureVisible(exam);
+    await tester.tap(exam);
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text(paper.name));
     await tester.tap(find.text(paper.name));
     await tester.pumpAndSettle();
