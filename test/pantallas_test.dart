@@ -7,6 +7,13 @@
 library;
 
 import 'package:cil/main.dart';
+import 'package:cil/cambridge.dart';
+import 'package:cil/cambridge_data.dart';
+import 'package:cil/screens/descargas.dart';
+import 'package:cil/screens/task_types.dart';
+import 'package:cil/screens/tutorial.dart';
+import 'package:cil/screens/writing.dart';
+import 'package:cil/writing_data.dart';
 import 'package:cil/widgets.dart';
 import 'package:cil/state.dart';
 import 'package:cil/screens/vocab.dart';
@@ -65,6 +72,138 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('wide editor keeps the task visible and the draft on resize', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final task = writingTasksFor(ExamLevel.b2).first;
+    final state = await AppState.open();
+    await state.saveDraft(task.id, 'A draft already started');
+    await tester.pumpWidget(
+      AppScope(
+        state: state,
+        child: MaterialApp(home: WritingEditor(task: task)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(task.question), findsOneWidget);
+    expect(find.byIcon(Icons.keyboard_arrow_up_rounded), findsNothing);
+    final editor = tester.getRect(find.byType(TextField));
+    final prompt = tester.getRect(find.text(task.question));
+    expect(prompt.right, lessThan(editor.left));
+    expect(editor.width, lessThanOrEqualTo(720));
+    await tester.enterText(
+      find.byType(TextField),
+      'This draft survives resizing',
+    );
+    tester.view.physicalSize = const Size(360, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('THE TASK · tap to read again'), findsOneWidget);
+    expect(find.text('This draft survives resizing'), findsOneWidget);
+    tester.view.physicalSize = const Size(1920, 900);
+    await tester.pumpAndSettle();
+    expect(find.text(task.question), findsOneWidget);
+    expect(find.text('This draft survives resizing'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    expect(state.writingDraft(task.id), 'This draft survives resizing');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Speaking retains a running timer across the rail breakpoint', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(await _app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Speaking'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start talking').first);
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('Pause'), findsOneWidget);
+    tester.view.physicalSize = const Size(800, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('Pause'), findsOneWidget);
+    tester.view.physicalSize = const Size(360, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('Pause'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final width in [360.0, 800.0, 1920.0]) {
+    testWidgets('secondary screens fit at $width with larger text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = Size(width, 1000);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.6;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final state = await AppState.open();
+      for (final screen in <Widget>[
+        const DescargasScreen(),
+        const TaskTypesScreen(),
+        const VocabScreen(),
+        const PantallaTutorial(),
+      ]) {
+        await tester.pumpWidget(
+          AppScope(
+            state: state,
+            child: MaterialApp(home: screen),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '$screen at $width');
+      }
+      await tester.pumpWidget(await _app());
+      await tester.pumpAndSettle();
+      for (final destino in ['Writing', 'Speaking', 'Mock test', 'Progress']) {
+        await tester.tap(find.text(destino));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: '$destino at $width');
+      }
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
+  testWidgets('official answers use columns and keep their values on resize', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1920, 1080);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(await _app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mock test'));
+    await tester.pumpAndSettle();
+    final paper = cambridgePapers.firstWhere(
+      (p) => p.source == PaperSource.official && p.selfMarked,
+    );
+    await tester.ensureVisible(find.text(paper.name));
+    await tester.tap(find.text(paper.name));
+    await tester.pumpAndSettle();
+    final fields = find.byType(TextField);
+    final first = tester.getRect(fields.at(0));
+    final second = tester.getRect(fields.at(1));
+    expect(first.top, second.top);
+    expect(first.right, lessThan(second.left));
+    await tester.enterText(fields.at(0), 'A');
+    tester.view.physicalSize = const Size(360, 1000);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(fields.first).controller!.text, 'A');
+    expect(
+      tester.getTopLeft(fields.at(0)).dy,
+      lessThan(tester.getTopLeft(fields.at(1)).dy),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets('the five destinations are all reachable from the bar', (
     tester,

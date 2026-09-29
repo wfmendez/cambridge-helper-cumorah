@@ -38,22 +38,23 @@ class SpeakingBody extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        ContentCard(
-          color: cambridgeOrange.withValues(alpha: 0.07),
-          border: cambridgeOrange.withValues(alpha: 0.3),
-          child: Text(
-            'Nobody can mark your speaking but an examiner. What this can do '
-            'is hold you to the clock, give you the language, and record you '
-            'so that you can hear what an examiner would. Say your answers '
-            'out loud — reading them in your head trains nothing.',
-            style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+        Seccion(
+          explicacion: ContentCard(
+            color: cambridgeOrange.withValues(alpha: 0.07),
+            border: cambridgeOrange.withValues(alpha: 0.3),
+            child: Text(
+              'Nobody can mark your speaking but an examiner. What this can do '
+              'is hold you to the clock, give you the language, and record you '
+              'so that you can hear what an examiner would. Say your answers '
+              'out loud — reading them in your head trains nothing.',
+              style: theme.textTheme.bodyMedium?.copyWith(height: 1.5),
+            ),
           ),
+          maxColumnas: 2,
+          anchoMinimo: 360,
+          rellenoCompacto: const EdgeInsets.only(top: 12),
+          children: [for (final p in speakingParts) _TarjetaParte(part: p)],
         ),
-        for (final p in speakingParts)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: _TarjetaParte(part: p),
-          ),
       ],
     );
   }

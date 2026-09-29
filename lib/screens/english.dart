@@ -1282,7 +1282,9 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
           ],
         ),
         body: Pagina(
-          ancho: anchoLectura,
+          ancho: widget.paper.source == PaperSource.official
+              ? anchoMenu
+              : anchoLectura,
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
           children: [
             if (res != null) ...[
@@ -1290,42 +1292,45 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
               const SizedBox(height: 8),
             ],
             if (widget.paper.whereToFind != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  border: Border.all(color: paperInk),
-                  color: const Color(0xFFF4F4F0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'THE QUESTIONS ARE ON PAPER',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                        color: paperInk,
+              Centrado(
+                ancho: anchoLectura,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: paperInk),
+                    color: const Color(0xFFF4F4F0),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'THE QUESTIONS ARE ON PAPER',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                          color: paperInk,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      widget.paper.whereToFind!,
-                      style: const TextStyle(color: paperInk, height: 1.5),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'This app does not reproduce Cambridge texts — it marks '
-                      'you. Work from the booklet and copy your answers across, '
-                      'exactly as you would onto the real answer sheet.',
-                      style: TextStyle(
-                        color: paperGrey,
-                        fontSize: 13,
-                        height: 1.45,
+                      const SizedBox(height: 6),
+                      Text(
+                        widget.paper.whereToFind!,
+                        style: const TextStyle(color: paperInk, height: 1.5),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      const Text(
+                        'This app does not reproduce Cambridge texts — it marks '
+                        'you. Work from the booklet and copy your answers across, '
+                        'exactly as you would onto the real answer sheet.',
+                        style: TextStyle(
+                          color: paperGrey,
+                          fontSize: 13,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             if (widget.paper.faltaAudio) _SinAudio(paper: widget.paper),
@@ -1380,21 +1385,29 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
                     ),
                   ),
                 ),
-              for (var q = part.from; q <= part.to; q++)
-                _FilaPregunta(
-                  number: q,
-                  item: part.itemFor(q),
-                  control: _campos[q]!,
-                  clave: part.answers[q],
-                  corregida: res != null,
-                  fallada:
-                      res
-                          ?.firstWhere((r) => r.part == part)
-                          .wrong
-                          .contains(q) ??
-                      false,
-                  ancho: part.type == AnswerType.transformation,
-                ),
+              Rejilla(
+                maxColumnas: widget.paper.source == PaperSource.official
+                    ? 3
+                    : 1,
+                rellenoCompacto: EdgeInsets.zero,
+                children: [
+                  for (var q = part.from; q <= part.to; q++)
+                    _FilaPregunta(
+                      number: q,
+                      item: part.itemFor(q),
+                      control: _campos[q]!,
+                      clave: part.answers[q],
+                      corregida: res != null,
+                      fallada:
+                          res
+                              ?.firstWhere((r) => r.part == part)
+                              .wrong
+                              .contains(q) ??
+                          false,
+                      ancho: part.type == AnswerType.transformation,
+                    ),
+                ],
+              ),
             ],
             const SizedBox(height: 20),
             FilledButton.icon(

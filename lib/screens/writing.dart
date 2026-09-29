@@ -150,6 +150,9 @@ class _WritingEditorState extends State<WritingEditor> {
   int _seconds = 0;
   bool _running = false;
   bool _taskOpen = true;
+  final _hojaKey = GlobalKey();
+  final _editorKey = GlobalKey();
+  final _scrollConsigna = ScrollController();
 
   (int, int) get _limits => widget.task.wordRange;
 
@@ -173,6 +176,7 @@ class _WritingEditorState extends State<WritingEditor> {
     _tick?.cancel();
     _save?.cancel();
     _text.dispose();
+    _scrollConsigna.dispose();
     super.dispose();
   }
 
@@ -246,85 +250,126 @@ class _WritingEditorState extends State<WritingEditor> {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            _TaskSheet(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final amplio = constraints.maxWidth >= corteAmplio;
+            final hoja = _TaskSheet(
+              key: _hojaKey,
               task: t,
-              open: _taskOpen,
-              onToggle: () => setState(() => _taskOpen = !_taskOpen),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              decoration: const BoxDecoration(
-                border: Border(
-                  top: BorderSide(color: paperRule),
-                  bottom: BorderSide(color: paperRule),
+              open: amplio || _taskOpen,
+              onToggle: amplio
+                  ? null
+                  : () => setState(() => _taskOpen = !_taskOpen),
+            );
+            final editor = Column(
+              key: _editorKey,
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: paperRule),
+                      bottom: BorderSide(color: paperRule),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '$n',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: colour,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          n == 0
+                              ? 'words · aim for $low–$high'
+                              : (inRange
+                                    ? 'words · within range'
+                                    : (n < low
+                                          ? 'words · ${low - n} short of $low'
+                                          : 'words · ${n - high} over $high')),
+                          style: const TextStyle(color: paperGrey),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _text.text.trim().isEmpty
+                            ? null
+                            : () {
+                                Clipboard.setData(
+                                  ClipboardData(text: _text.text),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Copied'),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.copy_rounded),
+                        tooltip: 'Copy the text',
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Row(
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: TextField(
+                      controller: _text,
+                      expands: true,
+                      maxLines: null,
+                      minLines: null,
+                      textAlignVertical: TextAlignVertical.top,
+                      style: const TextStyle(
+                        color: paperInk,
+                        height: 1.6,
+                        fontSize: 16,
+                      ),
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Write your answer here…',
+                        hintStyle: TextStyle(color: paperGrey),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+            if (amplio) {
+              return Centrado(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Scrollbar(
+                        controller: _scrollConsigna,
+                        child: SingleChildScrollView(
+                          controller: _scrollConsigna,
+                          child: hoja,
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(width: 24, color: paperRule),
+                    Expanded(flex: 3, child: editor),
+                  ],
+                ),
+              );
+            }
+            return Centrado(
+              ancho: anchoLectura,
+              child: Column(
                 children: [
-                  Text(
-                    '$n',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: colour,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      n == 0
-                          ? 'words · aim for $low–$high'
-                          : (inRange
-                                ? 'words · within range'
-                                : (n < low
-                                      ? 'words · ${low - n} short of $low'
-                                      : 'words · ${n - high} over $high')),
-                      style: const TextStyle(color: paperGrey),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _text.text.trim().isEmpty
-                        ? null
-                        : () {
-                            Clipboard.setData(ClipboardData(text: _text.text));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Copied'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                    icon: const Icon(Icons.copy_rounded),
-                    tooltip: 'Copy the text',
-                  ),
+                  hoja,
+                  Expanded(child: editor),
                 ],
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                child: TextField(
-                  controller: _text,
-                  expands: true,
-                  maxLines: null,
-                  minLines: null,
-                  textAlignVertical: TextAlignVertical.top,
-                  style: const TextStyle(
-                    color: paperInk,
-                    height: 1.6,
-                    fontSize: 16,
-                  ),
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Write your answer here…',
-                    hintStyle: TextStyle(color: paperGrey),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -335,6 +380,7 @@ class _WritingEditorState extends State<WritingEditor> {
 /// once you have read it you want the screen back for writing.
 class _TaskSheet extends StatelessWidget {
   const _TaskSheet({
+    super.key,
     required this.task,
     required this.open,
     required this.onToggle,
@@ -342,7 +388,7 @@ class _TaskSheet extends StatelessWidget {
 
   final WritingTask task;
   final bool open;
-  final VoidCallback onToggle;
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -366,16 +412,17 @@ class _TaskSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: onToggle,
-                visualDensity: VisualDensity.compact,
-                icon: Icon(
-                  open
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  color: paperGrey,
+              if (onToggle != null)
+                IconButton(
+                  onPressed: onToggle,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    open
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    color: paperGrey,
+                  ),
                 ),
-              ),
             ],
           ),
           if (open) ...[
