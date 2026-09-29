@@ -160,6 +160,19 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: '$screen at $width');
+        if (screen is DescargasScreen && width >= 800) {
+          final cards = find.byType(ContentCard);
+          expect(
+            tester.getSize(cards.at(1)).height,
+            tester.getSize(cards.at(2)).height,
+          );
+          if (width == 1920) {
+            expect(
+              tester.getSize(cards.at(2)).height,
+              tester.getSize(cards.at(3)).height,
+            );
+          }
+        }
       }
       await tester.pumpWidget(await _app());
       await tester.pumpAndSettle();

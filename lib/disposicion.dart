@@ -84,6 +84,18 @@ class Rejilla extends StatefulWidget {
   final EdgeInsets rellenoCompacto;
   final bool espacioFinal;
 
+  static int columnasPara(
+    double disponible, {
+    double anchoMinimo = 300,
+    int maxColumnas = 3,
+    double separacion = 16,
+  }) => disponible < corteMedio
+      ? 1
+      : ((disponible + separacion) / (anchoMinimo + separacion)).floor().clamp(
+          1,
+          maxColumnas,
+        );
+
   @override
   State<Rejilla> createState() => _RejillaState();
 }
@@ -94,12 +106,12 @@ class _RejillaState extends State<Rejilla> {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final columnas = constraints.maxWidth < corteMedio
-          ? 1
-          : ((constraints.maxWidth + widget.separacion) /
-                    (widget.anchoMinimo + widget.separacion))
-                .floor()
-                .clamp(1, widget.maxColumnas);
+      final columnas = Rejilla.columnasPara(
+        constraints.maxWidth,
+        anchoMinimo: widget.anchoMinimo,
+        maxColumnas: widget.maxColumnas,
+        separacion: widget.separacion,
+      );
       final ids = [
         for (var i = 0; i < widget.children.length; i++)
           widget.children[i].key ?? i,
