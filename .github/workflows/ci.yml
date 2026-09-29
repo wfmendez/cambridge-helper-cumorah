@@ -65,6 +65,15 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
+          # Sin esto el fallo llega como "--token is missing a value" desde el
+          # CLI, que no dice qué hay que arreglar.
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "Faltan secretos de Vercel en el repositorio." >&2
+            echo "Hacen falta VERCEL_TOKEN, VERCEL_ORG_ID y VERCEL_PROJECT_ID." >&2
+            echo "Los dos ids salen de .vercel/project.json tras 'vercel link'." >&2
+            exit 1
+          fi
+
           # Vercel no trae el SDK de Flutter, así que no compila el proyecto:
           # compilamos aquí y le entregamos la carpeta ya hecha. La
           # configuración de cabeceras viaja con ella.
