@@ -1,0 +1,16 @@
+# Copy to android/key.properties and fill in. That file is gitignored: the
+# keystore and its passwords never belong in the repository.
+#
+# Make the keystore once, keep it outside the repo, and back it up:
+#
+#   keytool -genkey -v -keystore /ruta/fuera/del/repo/cil-release.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias cil
+#
+# Losing this file means no one who already installed the app can ever update
+# it again — Android refuses an update signed with a different key, so they
+# would have to uninstall, and uninstalling wipes their progress.
+
+storeFile=F:/claves/cil-release.jks
+storePassword=
+keyAlias=cil
+keyPassword=

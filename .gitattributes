@@ -1,0 +1,13 @@
+# One line ending in the repository, whatever the machine. The CI checks
+# formatting on Linux and builds on Windows, and without this the two disagree
+# about every file.
+* text=auto eol=lf
+
+# Binaries, untouched.
+*.png binary
+*.ico binary
+*.jks binary
+*.keystore binary
+*.ttf binary
+*.otf binary
+*.mp3 binary

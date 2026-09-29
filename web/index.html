@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- viewport-fit=cover: sin esto la app queda con franjas blancas arriba y
+       abajo en un iPhone con notch cuando se abre desde la pantalla de inicio. -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description"
+        content="Practice for B1 Preliminary, B2 First and C1 Advanced. No account, nothing sent to a server, works offline.">
+  <meta name="theme-color" content="#12203A">
+
+  <!-- iOS: lo que convierte la pestaña en algo parecido a una app instalada
+       cuando se añade a la pantalla de inicio desde Safari. Es la vía por la
+       que esto llega a un iPhone sin App Store. -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cíl">
+  <!-- iOS ignora manifest.json para el icono: usa este y solo este. -->
+  <link rel="apple-touch-icon" href="icons/Icon-apple-180.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Cíl — Cambridge practice</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* El motor de Flutter pesa lo suyo y tarda en pintar el primer frame.
+       Sin esto la primera carga es un rectángulo blanco sin explicación, que
+       es la diferencia entre "está cargando" y "está roto". */
+    html, body { margin: 0; padding: 0; background: #FAF7F0; }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #12203A; }
+    }
+    #carga {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #5A6377;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+    }
+    #carga img { width: 72px; height: 72px; border-radius: 16px; }
+    @media (prefers-color-scheme: dark) { #carga { color: #9AA3B4; } }
+  </style>
+</head>
+<body>
+  <div id="carga">
+    <img src="icons/Icon-192.png" alt="">
+    <span>Loading&nbsp;Cíl…</span>
+  </div>
+
+  <script>
+    // `flutter-first-frame` lo dispara el motor cuando ya hay algo pintado,
+    // que es el único momento en que quitar esto no deja un hueco en blanco.
+    window.addEventListener('flutter-first-frame', function () {
+      var carga = document.getElementById('carga');
+      if (carga) carga.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

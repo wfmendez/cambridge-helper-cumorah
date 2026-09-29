@@ -1,0 +1,201 @@
+name: Release
+
+# Builds the three things the download page offers and publishes them
+# together, so the site and the binaries can never be from different versions.
+#
+# Triggered by a tag: `git tag v1.2.0 && git push origin v1.2.0`. The tag is
+# also where the version number comes from, so it cannot drift from what was
+# actually shipped.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      numero: ${{ steps.leer.outputs.numero }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: leer
+        # Sin tag (ejecución manual) se usa el número del commit, que sirve
+        # para probar el workflow sin publicar una versión de verdad.
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            echo "numero=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "numero=0.0.0-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: The tag and pubspec have to agree
+        if: github.ref_type == 'tag'
+        run: |
+          # El versionCode del APK sale del `+N` de pubspec, no del tag. Si se
+          # etiqueta una versión nueva sin subir ese número, Android rechaza
+          # instalarla encima de la que la gente ya tiene: el error aparecería
+          # en el teléfono de alguien, semanas después. Se comprueba aquí.
+          declarada=$(grep -m1 '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//')
+          nombre=${declarada%%+*}
+          codigo=${declarada##*+}
+          esperado=${GITHUB_REF_NAME#v}
+
+          if [ "$nombre" != "$esperado" ]; then
+            echo "El tag dice $esperado y pubspec.yaml dice $nombre." >&2
+            echo "Sube 'version:' en pubspec.yaml y vuelve a etiquetar." >&2
+            exit 1
+          fi
+          if [ "$nombre" = "$codigo" ]; then
+            echo "A pubspec.yaml le falta el '+N' del versionCode." >&2
+            exit 1
+          fi
+          echo "Versión $nombre, versionCode $codigo."
+
+  web:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Fijada a propósito: con solo `channel: stable` una versión nueva
+          # de Flutter puede romper la compilación sin que nadie toque nada.
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+
+      # --no-web-resources-cdn: sin esto el motor se descarga CanvasKit y la
+      # tipografía de respaldo desde gstatic.com en cada carga fría, lo que
+      # rompe el arranque sin conexión y manda una petición a Google que esta
+      # app no hace en ningún otro sitio.
+      - run: >
+          flutter build web --release --no-web-resources-cdn
+          --dart-define=APP_VERSION=${{ needs.version.outputs.numero }}
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          # Vercel no trae el SDK de Flutter, así que no compila el proyecto:
+          # compilamos aquí y le entregamos la carpeta ya hecha. La
+          # configuración de cabeceras viaja con ella.
+          cp vercel.json build/web/vercel.json
+          npm install --global vercel@latest
+          vercel deploy build/web --prod --yes --token="$VERCEL_TOKEN"
+
+  android:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Fijada a propósito: con solo `channel: stable` una versión nueva
+          # de Flutter puede romper la compilación sin que nadie toque nada.
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+
+      - name: Restore the signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          # Sin la clave no se publica: un APK firmado con la de depuración no
+          # puede actualizar el que la gente ya tiene instalado.
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Falta el secreto ANDROID_KEYSTORE_BASE64." >&2
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/cil-release.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/cil-release.jks
+          storePassword=$STORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - run: >
+          flutter build apk --release
+          --dart-define=APP_VERSION=${{ needs.version.outputs.numero }}
+
+      - run: mv build/app/outputs/flutter-apk/app-release.apk cil-android.apk
+
+      - name: Check it is not debug-signed
+        run: |
+          # Una firma equivocada solo se nota cuando alguien no puede
+          # actualizar, que es demasiado tarde. Se mira aquí.
+          if keytool -printcert -jarfile cil-android.apk | grep -q "CN=Android Debug"; then
+            echo "El APK salió firmado con la clave de depuración." >&2
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: cil-android.apk
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Fijada a propósito: con solo `channel: stable` una versión nueva
+          # de Flutter puede romper la compilación sin que nadie toque nada.
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+      - run: flutter build windows --release --dart-define=APP_VERSION=${{ needs.version.outputs.numero }}
+
+      # El ejecutable no va solo: necesita las DLL y la carpeta data que
+      # quedan a su lado. Se comprime el directorio entero.
+      - run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath cil-windows.zip
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: cil-windows.zip
+
+  publish:
+    needs: [version, android, windows]
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cil-android.apk
+            cil-windows.zip
+          generate_release_notes: true
+          body: |
+            Instalar o actualizar desde la web: https://${{ vars.SITIO || 'cil.vercel.app' }}
+
+            **Android** — `cil-android.apk`. Si ya lo tienes instalado, se
+            instala encima y conserva tu progreso.
+
+            **Windows** — `cil-windows.zip`. Descomprime y ejecuta `Cíl.exe`.
+            Windows avisará de que no reconoce al editor: la app no está
+            firmada con un certificado de pago.
+
+            **iPhone** — no hay descarga. Abre la web en Safari y usa
+            Compartir → Añadir a pantalla de inicio.

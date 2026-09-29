@@ -1,0 +1,26 @@
+name: CI
+
+# Analysis and tests on every push. Cheap, and the only thing standing
+# between a typo and a broken release.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Fijada a propósito: con solo `channel: stable` una versión nueva
+          # de Flutter puede romper la compilación sin que nadie toque nada.
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
