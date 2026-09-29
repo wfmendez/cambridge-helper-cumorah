@@ -33,8 +33,15 @@ If it is off-topic, a copied prompt or mostly instructions, say so and reflect i
 Give a short summary, 1–3 strengths and 1–3 practical next steps. Avoid generic praise.
 Select up to 8 important genuine language errors. Quote each original EXACTLY from the answer,
 with its replacement and a brief explanation. Use an empty list if there are no errors.
+Distinguish actual errors from optional stylistic preferences. Accept standard British and American
+spellings, punctuation variants and established unaccented loanwords (for example cafe/café).
+Do not present such alternatives as errors or lower Language marks because of them.
 Correct the submitted English while preserving its meaning, examples and personal voice.
 Do not invent experiences, silently supply missing task points, or turn it into a new model answer.
+Keep names, facts, quantities, pronouns and singular/plural referents unchanged. In a disagreement
+between an explicit plural subject and its verb, correct the VERB: 'my cousins is' becomes
+'my cousins are', not 'my cousin is'. Apply the same rule in next steps and correctedText.
+Before returning the JSON, check that every correction is necessary and preserves those facts.
 All explanations must be clear English accessible to a learner at the target level.
 Return only the JSON specified by the schema, without markdown.`;
 
@@ -100,7 +107,7 @@ async function review(input, {env, fetchImpl}) {
           : {'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01'},
         body: JSON.stringify(groq ? {
           model: env.GROQ_WRITING_MODEL || 'openai/gpt-oss-120b',
-          max_completion_tokens: 4096, reasoning_effort: 'low',
+          max_completion_tokens: 4096, reasoning_effort: 'medium',
           messages: [{role: 'system', content: system}, {role: 'user', content: user}],
           response_format: {type: 'json_schema', json_schema: {name: 'writing_review', strict: true, schema}},
         } : {
