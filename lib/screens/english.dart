@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../cambridge.dart';
 import '../cambridge_data.dart';
 import '../brand.dart';
@@ -43,78 +45,91 @@ class EnglishScreen extends StatefulWidget {
 class _EnglishScreenState extends State<EnglishScreen> {
   int _destino = 0;
 
+  // Una sola lista alimenta ambas formas de navegación.
+  static const _destinos = [
+    (Icons.school_outlined, Icons.school_rounded, 'Practice'),
+    (Icons.edit_outlined, Icons.edit_rounded, 'Writing'),
+    (Icons.mic_none_rounded, Icons.mic_rounded, 'Speaking'),
+    (Icons.assignment_outlined, Icons.assignment_rounded, 'Mock test'),
+    (Icons.insights_outlined, Icons.insights_rounded, 'Progress'),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
-
+    final amplio = MediaQuery.sizeOf(context).width >= corteAmplio;
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: Column(
+        // La columna y el IndexedStack conservan su sitio al cambiar de ancho.
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Cabecera(
-                    subtitulo: 'Cambridge certification practice',
-                    trailing: _AccionesCabecera(),
-                  ),
-                  const SizedBox(height: 10),
-                  const _GoalPicker(),
-                  const SizedBox(height: 8),
+            if (amplio) ...[
+              NavigationRail(
+                labelType: NavigationRailLabelType.all,
+                selectedIndex: _destino,
+                onDestinationSelected: (i) => setState(() => _destino = i),
+                destinations: [
+                  for (final (icono, seleccionado, etiqueta) in _destinos)
+                    NavigationRailDestination(
+                      icon: Icon(icono),
+                      selectedIcon: Icon(seleccionado),
+                      label: Text(etiqueta),
+                    ),
                 ],
               ),
-            ),
+              const VerticalDivider(width: 1),
+            ],
             Expanded(
-              // IndexedStack y no TabBarView: cambiar de destino no debe
-              // perder el borrador a medio escribir ni por dónde ibas leyendo.
-              child: IndexedStack(
-                index: _destino,
+              child: Column(
                 children: [
-                  const _Practica(),
-                  WritingBody(level: state.goal),
-                  const SpeakingBody(),
-                  const _Simulacros(),
-                  const ProgressTab(),
+                  Centrado(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Cabecera(
+                          subtitulo: 'Cambridge certification practice',
+                          trailing: _AccionesCabecera(),
+                        ),
+                        const SizedBox(height: 10),
+                        const _GoalPicker(),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: IndexedStack(
+                      index: _destino,
+                      children: [
+                        const _Practica(),
+                        WritingBody(level: state.goal),
+                        const SpeakingBody(),
+                        const _Simulacros(),
+                        const ProgressTab(),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _destino,
-        onDestinationSelected: (i) => setState(() => _destino = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.school_outlined),
-            selectedIcon: Icon(Icons.school_rounded),
-            label: 'Practice',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.edit_outlined),
-            selectedIcon: Icon(Icons.edit_rounded),
-            label: 'Writing',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.mic_none_rounded),
-            selectedIcon: Icon(Icons.mic_rounded),
-            label: 'Speaking',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment_rounded),
-            label: 'Mock test',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insights_outlined),
-            selectedIcon: Icon(Icons.insights_rounded),
-            label: 'Progress',
-          ),
-        ],
-      ),
+      bottomNavigationBar: amplio
+          ? null
+          : NavigationBar(
+              selectedIndex: _destino,
+              onDestinationSelected: (i) => setState(() => _destino = i),
+              destinations: [
+                for (final (icono, seleccionado, etiqueta) in _destinos)
+                  NavigationDestination(
+                    icon: Icon(icono),
+                    selectedIcon: Icon(seleccionado),
+                    label: etiqueta,
+                  ),
+              ],
+            ),
     );
   }
 }
@@ -269,7 +284,7 @@ class _Practica extends StatelessWidget {
     final theme = Theme.of(context);
     final flojo = state.weakestTopic;
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         // Understand the tasks first, then drill them: Cambridge's own
@@ -657,7 +672,8 @@ class _SesionPracticaState extends State<_SesionPractica> {
           ),
         ),
       ),
-      body: ListView(
+      body: Pagina(
+        ancho: anchoLectura,
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
           Text(
@@ -868,7 +884,7 @@ class _Simulacros extends StatelessWidget {
     final state = AppScope.of(context);
     final theme = Theme.of(context);
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         ContentCard(
@@ -1249,7 +1265,8 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
             ),
           ],
         ),
-        body: ListView(
+        body: Pagina(
+          ancho: anchoLectura,
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
           children: [
             if (res != null) ...[
@@ -1592,7 +1609,8 @@ class _Guia extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return ListView(
+    return Pagina(
+      ancho: anchoLectura,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         const TarjetaTutorial(),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../cambridge_tasks.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
@@ -18,7 +20,7 @@ class TaskTypesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('How the tasks work')),
-      body: ListView(
+      body: Pagina(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           ContentCard(

@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../speaking_data.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
@@ -33,7 +35,7 @@ class SpeakingBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         ContentCard(

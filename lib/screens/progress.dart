@@ -11,6 +11,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../brand.dart';
 import '../cambridge.dart';
 import '../cambridge_data.dart';
@@ -40,7 +42,7 @@ class ProgressTab extends StatelessWidget {
       (porPaper[i.paperId] ??= []).add(i);
     }
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
         _Resumen(intentos: intentos, temas: temas),
@@ -87,7 +89,8 @@ class _Vacio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return ListView(
+    return Pagina(
+      ancho: anchoLectura,
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 32),
       children: [
         Ilustracion(

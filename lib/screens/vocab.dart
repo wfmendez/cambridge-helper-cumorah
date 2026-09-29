@@ -8,6 +8,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../brand.dart';
 import '../cambridge_theme.dart';
 import '../state.dart';
@@ -41,7 +43,7 @@ class _VocabScreenState extends State<VocabScreen> {
       appBar: AppBar(title: const Text('Word bank')),
       body: Column(
         children: [
-          Padding(
+          Centrado(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: TextField(
               controller: _busqueda,
@@ -71,7 +73,7 @@ class _VocabScreenState extends State<VocabScreen> {
         ],
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
+        child: Centrado(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
           child: Text(
             'Reading a list is not learning it. Come back to Practice and be '
@@ -96,7 +98,7 @@ class _Listado extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         for (final s in sets) ...[
@@ -168,7 +170,7 @@ class _Resultados extends StatelessWidget {
       );
     }
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
       children: [
         ContentCard(

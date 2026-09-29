@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../disposicion.dart';
+
 import 'package:flutter/services.dart';
 
 import '../cambridge.dart';
@@ -40,7 +43,7 @@ class WritingBody extends StatelessWidget {
     final theme = Theme.of(context);
     final tasks = writingTasksFor(level);
 
-    return ListView(
+    return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         ContentCard(

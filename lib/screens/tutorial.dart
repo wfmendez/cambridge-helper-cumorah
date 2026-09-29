@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../brand.dart';
 import '../cambridge_theme.dart';
 import '../state.dart';
@@ -145,7 +147,8 @@ class _PantallaTutorialState extends State<PantallaTutorial> {
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
+            Centrado(
+              ancho: anchoLectura,
               padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
               child: Row(
                 children: [
@@ -170,7 +173,8 @@ class _PantallaTutorialState extends State<PantallaTutorial> {
                 itemBuilder: (_, i) => _Pagina(paso: pasosTutorial[i]),
               ),
             ),
-            Padding(
+            Centrado(
+              ancho: anchoLectura,
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               child: Row(
                 children: [
@@ -219,7 +223,8 @@ class _Pagina extends StatelessWidget {
     final theme = Theme.of(context);
     final colour = cambridgeReadable(paso.colour, theme.colorScheme);
 
-    return ListView(
+    return Pagina(
+      ancho: anchoLectura,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       children: [
         Ilustracion(escena: paso.escena, color: colour, size: 165),

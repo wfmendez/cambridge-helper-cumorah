@@ -7,11 +7,14 @@
 library;
 
 import 'package:cil/main.dart';
+import 'package:cil/widgets.dart';
 import 'package:cil/state.dart';
 import 'package:cil/screens/vocab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'audio_falso.dart';
 
 Future<Widget> _app() async {
   final state = await AppState.open();
@@ -21,7 +24,38 @@ Future<Widget> _app() async {
 void main() {
   // El tutorial de primera vez tapa la app entera; estas pruebas son sobre
   // lo que hay debajo.
-  setUp(() => SharedPreferences.setMockInitialValues({'tutorial_seen': true}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({'tutorial_seen': true});
+    simularAudio();
+  });
+
+  for (final width in [360.0, 800.0, 1920.0]) {
+    testWidgets('navigation and content width at $width', (tester) async {
+      tester.view.physicalSize = Size(width, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(await _app());
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(NavigationRail),
+        width >= 840 ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.byType(NavigationBar),
+        width < 840 ? findsOneWidget : findsNothing,
+      );
+      final cardWidth = tester.getSize(find.byType(ContentCard).first).width;
+      if (width == 360) expect(cardWidth, width - 32);
+      expect(cardWidth, lessThanOrEqualTo(1200));
+      await tester.tap(find.text('Writing'));
+      await tester.pumpAndSettle();
+      expect(find.text('PART 1 · COMPULSORY'), findsOneWidget);
+      tester.view.physicalSize = Size(width == 1920 ? 360 : 1920, 900);
+      await tester.pumpAndSettle();
+      expect(find.text('PART 1 · COMPULSORY'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('the five destinations are all reachable from the bar', (
     tester,

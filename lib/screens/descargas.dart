@@ -8,6 +8,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../disposicion.dart';
+
 import '../brand.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
@@ -48,7 +50,7 @@ class DescargasScreen extends StatelessWidget {
             ),
         ],
       ),
-      body: ListView(
+      body: Pagina(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
           ContentCard(
