@@ -235,13 +235,23 @@ void main() {
       await tester.enterText(fields.at(0), 'A');
       await tester.enterText(fields.at(1), 'B');
       expect(find.textContaining('Correct ·'), findsNothing);
-      await tester.scrollUntilVisible(find.text('Mark my answers'), 700);
+      final sheet = find
+          .descendant(
+            of: find.byType(ListView).first,
+            matching: find.byType(Scrollable),
+          )
+          .first;
+      await tester.scrollUntilVisible(
+        find.text('Mark my answers'),
+        700,
+        scrollable: sheet,
+      );
       await tester.tap(find.text('Mark my answers'));
       await tester.pumpAndSettle();
       final first = find.byWidgetPredicate(
         (widget) => widget is ExamAnswerField && widget.number == 1,
       );
-      await tester.scrollUntilVisible(first, -700);
+      await tester.scrollUntilVisible(first, -700, scrollable: sheet);
       await tester.ensureVisible(first);
       await tester.pumpAndSettle();
       expect(find.text('Correct · 1/1 mark'), findsOneWidget);
