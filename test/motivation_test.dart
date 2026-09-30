@@ -5,6 +5,7 @@ import 'package:cil/encouragement.dart';
 import 'package:cil/learner_profile.dart';
 import 'package:cil/main.dart';
 import 'package:cil/motivation_art.dart';
+import 'package:cil/practice.dart';
 import 'package:cil/screens/profile.dart';
 import 'package:cil/state.dart';
 import 'package:cil/theme.dart';
@@ -181,31 +182,54 @@ void main() {
     );
     await tester.pumpWidget(CilApp(state: state));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Passive voice'));
-    await tester.tap(find.text('Passive voice'));
+    await tester.ensureVisible(find.text('Relative clauses'));
     await tester.pumpAndSettle();
-    // The B1 passive deck has one question, so this exercises finishing and retrying.
-    final options = find.text('made');
-    expect(options, findsOneWidget);
-    await tester.tap(options);
-    await tester.pump();
-    await tester.tap(find.text('Check'));
+    await tester.tap(find.text('Relative clauses'));
     await tester.pumpAndSettle();
+
+    // The deck is shuffled and grows as content is added, so each question is
+    // recognised by its prompt instead of assumed. All multiple choice.
+    final mazo = exercisesFor('relativas', goal: ExamLevel.b1);
+    expect(mazo.every((e) => e.options.isNotEmpty), isTrue);
+    Exercise enPantalla() =>
+        mazo.firstWhere((e) => find.text(e.prompt).evaluate().isNotEmpty);
+    Future<void> responder(Exercise e, {required bool bien}) async {
+      final opcion = bien
+          ? e.correct
+          : e.options.firstWhere((o) => !e.accepts(o));
+      await tester.tap(find.text(opcion));
+      await tester.pump();
+      await tester.tap(find.text('Check'));
+      await tester.pumpAndSettle();
+    }
+
+    // The first answer is wrong on purpose: it still counts, once, and still
+    // meets a one-question daily goal.
+    final fallada = enPantalla();
+    await responder(fallada, bien: false);
     expect(state.todayQuestions, 1);
     expect(find.text('Daily goal complete, Ana'), findsOneWidget);
+    for (var i = 1; i < mazo.length; i++) {
+      await tester.ensureVisible(find.text('Next'));
+      await tester.tap(find.text('Next'));
+      await tester.pumpAndSettle();
+      await responder(enPantalla(), bien: true);
+    }
+    expect(state.todayQuestions, mazo.length);
+
     await tester.ensureVisible(find.text('Finish'));
     await tester.tap(find.text('Finish'));
     await tester.pumpAndSettle();
     expect(find.text('Practice complete'), findsOneWidget);
-    expect(state.todayQuestions, 1);
+    expect(state.todayQuestions, mazo.length);
+
+    // Retrying brings back only the one that was missed.
     await tester.ensureVisible(find.text('Try this question again'));
     await tester.tap(find.text('Try this question again'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('was made'));
-    await tester.pump();
-    await tester.tap(find.text('Check'));
-    await tester.pumpAndSettle();
-    expect(state.todayQuestions, 2);
+    expect(enPantalla(), fallada);
+    await responder(fallada, bien: true);
+    expect(state.todayQuestions, mazo.length + 1);
     expect(state.mistakes, isEmpty);
     expect(find.text('Well done, Ana'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());

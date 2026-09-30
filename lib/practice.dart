@@ -42,6 +42,18 @@ const List<Topic> topics = [
     level: ExamLevel.b1,
   ),
   Topic(
+    'pasado',
+    'Past simple and continuous',
+    'What was happening, and what happened.',
+    level: ExamLevel.b1,
+  ),
+  Topic(
+    'futuro',
+    'Future forms',
+    'will, going to and the present for plans.',
+    level: ExamLevel.b1,
+  ),
+  Topic(
     'passive',
     'Passive voice',
     'When and how to turn the sentence round.',
@@ -51,6 +63,12 @@ const List<Topic> topics = [
     'comparativos',
     'Comparatives and superlatives',
     'More than, the most, as… as.',
+    level: ExamLevel.b1,
+  ),
+  Topic(
+    'cuantificadores',
+    'Quantifiers',
+    'some, any, much, many, a few, a little.',
     level: ExamLevel.b1,
   ),
   Topic(
