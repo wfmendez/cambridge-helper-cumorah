@@ -1,6 +1,8 @@
 import 'package:cil/cambridge.dart';
 import 'package:cil/cambridge_data.dart';
+import 'package:cil/b1_data.dart';
 import 'package:cil/cil_extra_papers.dart';
+import 'package:cil/cil_paper_b1.dart';
 import 'package:cil/listening_resources.dart';
 import 'package:cil/main.dart';
 import 'package:cil/screens/listening_library.dart';
@@ -15,17 +17,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'audio_falso.dart';
 
 void main() {
-  test('eight original papers have complete keys, text and explanations', () {
+  test('nine original papers have complete keys, text and explanations', () {
     final originals = cambridgePapers
         .where((p) => p.source == PaperSource.cil)
         .toList();
-    expect(originals.length, 8);
-    expect(originals.fold<int>(0, (n, p) => n + p.questions), 208);
+    expect(originals.length, 9);
+    expect(originals.fold<int>(0, (n, p) => n + p.questions), 240);
     expect(
       cambridgePapers.map((p) => p.id).toSet().length,
       cambridgePapers.length,
     );
     for (final paper in originals) {
+      final b1 = paper.level == ExamLevel.b1;
       final seen = <int>{};
       for (final part in paper.parts) {
         expect(part.items.length, part.questions, reason: paper.id);
@@ -35,23 +38,58 @@ void main() {
           final item = part.itemFor(q)!;
           expect(item.explanation, isNotNull);
           expect(item.explanation!.length, greaterThan(35));
-          if (part.type != AnswerType.transformation && part.number <= 6) {
+          if (b1) {
+            // B1 Part 1 is five separate notices: each one is its own stem.
+            // Parts 4–6 are the gapped ones.
+            if (part.number == 1) {
+              expect(item.stem!.length, greaterThan(60), reason: 'B1 $q');
+            } else {
+              expect(part.passage, isNotEmpty, reason: 'B1 $q');
+            }
+            if (part.number >= 4) {
+              expect(part.passage, contains('($q) ___'), reason: 'B1 $q');
+            }
+          } else if (part.type != AnswerType.transformation &&
+              part.number <= 6) {
             expect(part.passage, isNotEmpty);
             if (part.number != 5) expect(part.passage, contains('($q) ___'));
           }
           if (item.options.isNotEmpty) {
-            expect(item.options.toSet().length, 4);
-            expect(part.answers[q], matches(RegExp(r'^[A-D]$')));
+            // B1 Part 1 has three options, every other multiple choice four.
+            final opciones = b1 && part.number == 1 ? 3 : 4;
+            expect(item.options.toSet().length, opciones, reason: '$q');
+            expect(
+              'ABCD'.substring(0, opciones),
+              contains(part.answers[q]),
+              reason: '${paper.id}: $q',
+            );
+          } else if (b1 && part.type == AnswerType.choice) {
+            // B1 matching and gapped text: the key is a letter listed in the
+            // passage, so it can never point at an option that is not there.
+            expect(part.passage, contains('${part.answers[q]}  '));
           }
         }
       }
     }
   });
 
+  test('the B1 paper has the shape of the real B1 Reading paper', () {
+    expect(cilPaperB1.level, ExamLevel.b1);
+    expect(cilPaperB1.minutes, 45);
+    expect(cilPaperB1.questions, 32);
+    expect(cilPaperB1.maxMarks, 32);
+    expect(cilPaperB1.parts.map((p) => p.questions), [5, 5, 5, 5, 6, 6]);
+    // Same shape as the official sample, part by part.
+    expect(
+      cilPaperB1.parts.map((p) => (p.from, p.to, p.type)),
+      b1Reading.parts.map((p) => (p.from, p.to, p.type)),
+    );
+  });
+
   test(
-    'all six new papers mark realistic keys to full marks and blanks to zero',
+    'the newer papers mark realistic keys to full marks and blanks to zero',
     () {
-      for (final paper in extraCilPapers) {
+      for (final paper in [...extraCilPapers, cilPaperB1]) {
         final responses = <int, String>{};
         for (final part in paper.parts) {
           for (var q = part.from; q <= part.to; q++) {
@@ -152,8 +190,11 @@ void main() {
       await tester.scrollUntilVisible(reading, 300, scrollable: list);
       await tester.tap(reading);
       await tester.pumpAndSettle();
+      // B2 is the default goal, and B2 includes the B1 material below it.
       expect(
-        find.text('4 B2 papers · 88 questions · every answer explained'),
+        find.text(
+          '5 papers · 4 B2, 1 B1 · 120 questions · every answer explained',
+        ),
         findsOneWidget,
       );
       expect(find.text('Cíl Paper 1 · Use of English'), findsNothing);
@@ -179,6 +220,30 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     });
   }
+
+  testWidgets('a B1 learner sees B1 papers only, without a Use of English '
+      'filter that would lead nowhere', (tester) async {
+    SharedPreferences.setMockInitialValues({'tutorial_seen': true});
+    simularAudio();
+    tester.view.physicalSize = const Size(1280, 1100);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final state = await AppState.open();
+    await state.setGoal(ExamLevel.b1);
+    await tester.pumpWidget(CilApp(state: state));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Mock test').first);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('1 B1 paper · 32 questions · every answer explained'),
+      findsOneWidget,
+    );
+    expect(find.text('Cíl B1 Paper 1 · Reading'), findsOneWidget);
+    expect(find.text('Cíl Paper 3 · Use of English'), findsNothing);
+    expect(find.widgetWithText(ChoiceChip, 'Use of English'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'listening remains readable with large text and can copy a direct link',

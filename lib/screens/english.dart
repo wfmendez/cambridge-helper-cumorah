@@ -1053,14 +1053,52 @@ class _SimulacrosState extends State<_Simulacros> {
   ExamLevel _nivel = ExamLevel.b2;
   String _cilSkill = 'All papers';
 
-  Iterable<ExamPaper> get _cilPapers => cambridgePapers.where(
+  /// Cíl's own papers at the learner's level and below — the rule the whole
+  /// app follows — with their own level first: someone aiming at B2 came for
+  /// B2 papers, and the B1 ones are there to go back to.
+  List<ExamPaper> get _cilAlNivel {
+    final meta = _meta ?? ExamLevel.b2;
+    final propios = cambridgePapers.where(
+      (p) => p.source == PaperSource.cil && p.level.index <= meta.index,
+    );
+    return [
+      ...propios.where((p) => p.level == meta),
+      ...propios.where((p) => p.level != meta),
+    ];
+  }
+
+  /// B1 has no Use of English paper, so the filter is only offered when
+  /// there is something behind it.
+  List<String> get _cilSkills => [
+    'All papers',
+    if (_cilAlNivel.any((p) => p.id.endsWith('-use-of-english')))
+      'Use of English',
+    'Reading',
+  ];
+
+  Iterable<ExamPaper> get _cilPapers => _cilAlNivel.where(
     (paper) =>
-        paper.source == PaperSource.cil &&
-        (_cilSkill == 'All papers' ||
-            (_cilSkill == 'Reading'
-                ? paper.id.endsWith('-reading')
-                : paper.id.endsWith('-use-of-english'))),
+        _cilSkill == 'All papers' ||
+        (_cilSkill == 'Reading'
+            ? paper.id.endsWith('-reading')
+            : paper.id.endsWith('-use-of-english')),
   );
+
+  /// "4 B2 papers", or "5 papers · 4 B2, 1 B1" once there is more than one
+  /// level: the count says what you are looking at.
+  String get _resumenCil {
+    final papers = _cilPapers.toList();
+    final porNivel = <ExamLevel, int>{};
+    for (final p in papers) {
+      porNivel[p.level] = (porNivel[p.level] ?? 0) + 1;
+    }
+    final n = papers.length;
+    final cuantos = porNivel.length == 1
+        ? '$n ${porNivel.keys.single.cefr} ${n == 1 ? 'paper' : 'papers'}'
+        : '$n papers · ${[for (final e in porNivel.entries) '${e.value} ${e.key.cefr}'].join(', ')}';
+    final preguntas = papers.fold<int>(0, (total, p) => total + p.questions);
+    return '$cuantos · $preguntas questions · every answer explained';
+  }
 
   Widget _cilTools(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1069,7 +1107,7 @@ class _SimulacrosState extends State<_Simulacros> {
         spacing: 8,
         runSpacing: 8,
         children: [
-          for (final skill in ['All papers', 'Use of English', 'Reading'])
+          for (final skill in _cilSkills)
             ChoiceChip(
               label: Text(skill),
               selected: _cilSkill == skill,
@@ -1078,12 +1116,7 @@ class _SimulacrosState extends State<_Simulacros> {
         ],
       ),
       const SizedBox(height: 8),
-      Text(
-        '${_cilPapers.length} B2 papers · '
-        '${_cilPapers.fold<int>(0, (total, paper) => total + paper.questions)} '
-        'questions · every answer explained',
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
+      Text(_resumenCil, style: Theme.of(context).textTheme.bodySmall),
       const SizedBox(height: 8),
       Wrap(
         spacing: 12,
@@ -1122,6 +1155,9 @@ class _SimulacrosState extends State<_Simulacros> {
     if (_meta != meta) {
       _meta = meta;
       _nivel = meta;
+      // Un filtro que ya no existe a este nivel (Use of English en B1)
+      // dejaría la lista vacía sin decir por qué.
+      if (!_cilSkills.contains(_cilSkill)) _cilSkill = 'All papers';
     }
   }
 
