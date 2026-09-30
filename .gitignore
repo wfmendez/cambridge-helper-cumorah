@@ -53,6 +53,7 @@ app.*.map.json
 # and key.properties only points at it.
 *.jks
 *.keystore
+/.signing/
 /android/key.properties
 /android/local.properties
 

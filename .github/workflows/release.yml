@@ -1,7 +1,7 @@
 name: Release
 
-# The downloadable binaries: the Android APK and the Windows zip, published
-# together in one release.
+# The downloadable binaries. Publish Android as soon as it is ready, then
+# attach Windows to the same release; a Windows failure must not block the APK.
 #
 # The site is not here — it follows main, in ci.yml, because a website should
 # be whatever was last merged and waiting for a tag to fix a typo in it would
@@ -105,12 +105,17 @@ jobs:
 
       - name: Check it is not debug-signed
         run: |
-          # Una firma equivocada solo se nota cuando alguien no puede
-          # actualizar, que es demasiado tarde. Se mira aquí.
-          if keytool -printcert -jarfile cil-android.apk | grep -q "CN=Android Debug"; then
+          signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          "$signer" verify --verbose --print-certs cil-android.apk > signing-report.txt
+          if grep -q "CN=Android Debug" signing-report.txt; then
             echo "El APK salió firmado con la clave de depuración." >&2
             exit 1
           fi
+          cat signing-report.txt
+
+      - name: Remove restored signing files
+        if: always()
+        run: rm -f android/key.properties "$RUNNER_TEMP/cil-release.jks"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -143,7 +148,7 @@ jobs:
           path: cil-windows.zip
 
   publish:
-    needs: [version, android, windows]
+    needs: [version, android]
     runs-on: ubuntu-latest
     if: github.ref_type == 'tag'
     steps:
@@ -153,25 +158,33 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: android
-      - uses: actions/download-artifact@v8
-        with:
-          name: windows
-
       - uses: softprops/action-gh-release@v3
         with:
-          files: |
-            cil-android.apk
-            cil-windows.zip
+          files: cil-android.apk
+          fail_on_unmatched_files: true
           generate_release_notes: true
           body: |
-            Instalar o actualizar desde la web: https://${{ vars.SITIO || 'cil.vercel.app' }}
+            Instalar o actualizar desde la web: https://cambridge-helper-cumorah.vercel.app/
 
-            **Android** — `cil-android.apk`. Si ya lo tienes instalado, se
-            instala encima y conserva tu progreso.
+            **Android** — `cil-android.apk`, firmado para distribución.
+            Las siguientes versiones conservarán la misma firma para permitir
+            actualizar sin desinstalar. No necesitas iniciar sesión en GitHub.
 
-            **Windows** — `cil-windows.zip`. Descomprime y ejecuta `Cíl.exe`.
-            Windows avisará de que no reconoce al editor: la app no está
-            firmada con un certificado de pago.
+            **Windows** — `cil-windows.zip` se añade cuando termina su compilación.
+            Descomprime el archivo completo y ejecuta `Cíl.exe`.
 
             **iPhone** — no hay descarga. Abre la web en Safari y usa
             Compartir → Añadir a pantalla de inicio.
+
+  publish-windows:
+    needs: [windows, publish]
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: windows
+      - name: Attach Windows to the published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" cil-windows.zip --repo "$GITHUB_REPOSITORY" --clobber

@@ -67,6 +67,19 @@ The APK lands in `build/app/outputs/flutter-apk/app-release.apk`. Install with
 `adb install -r`, or send the file to someone and let them open it with
 installation from unknown sources enabled.
 
+Public downloads are GitHub release assets named `cil-android.apk` and
+`cil-windows.zip`. Deploying the website alone does not create these files:
+publish a matching `vX.Y.Z` tag after bumping `version` and the Android build
+number in `pubspec.yaml`. The Release workflow publishes Android first, then
+adds Windows when its build finishes. It verifies the APK signature before
+publication and refuses debug-signed APKs.
+
+Android releases require the repository secrets `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_STORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`.
+Keep the original keystore and its passwords backed up securely: future APKs
+must use the same key to update installed copies. Local signing material in
+`.signing/` and `android/key.properties` is ignored by Git and must stay private.
+
 ## Pick your goal
 
 The three chips at the top — **PET**, **FCE** and **CAE** — set what you are working
