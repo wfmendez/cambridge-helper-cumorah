@@ -14,6 +14,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  capture-mobile:
+    # Manual runs provide fresh Windows reference images for human review.
+    # The normal comparison below still runs against committed references.
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/goldens.yml
+
   check:
     runs-on: ubuntu-latest
     steps:

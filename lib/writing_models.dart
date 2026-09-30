@@ -8,6 +8,8 @@
 /// write is not a model, it is the answer.
 library;
 
+part 'writing_extra_models.dart';
+
 class WritingModel {
   const WritingModel({required this.text, required this.why});
 
@@ -85,6 +87,7 @@ const List<Criterion> writingCriteria = [
 ];
 
 const Map<String, WritingModel> writingModels = {
+  ...extraWritingModels,
   'b1-p1-weekend': WritingModel(
     text:
         'Hi Alex,\n\n'

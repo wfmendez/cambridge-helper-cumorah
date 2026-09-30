@@ -1,6 +1,14 @@
-/// On a phone there is no browser to hand the address to. See enlace.dart.
+/// Native apps open learning resources in the device's browser.
 library;
 
-/// Always false: the caller falls back to copying the address, which is what
-/// the rest of the app does anyway.
-Future<bool> abrirEnlace(String url) async => false;
+import 'package:url_launcher/url_launcher.dart';
+
+Future<bool> abrirEnlace(String url) async {
+  final uri = Uri.tryParse(url);
+  if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return false;
+  try {
+    return await launchUrl(uri, mode: LaunchMode.externalApplication);
+  } catch (_) {
+    return false;
+  }
+}

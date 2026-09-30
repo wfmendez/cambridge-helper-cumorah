@@ -118,7 +118,7 @@ class _TaskRow extends StatelessWidget {
                 Text(task.kind.label, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 3),
                 Text(
-                  task.question,
+                  task.title ?? task.question,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodySmall?.copyWith(

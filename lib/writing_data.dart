@@ -11,6 +11,8 @@ library;
 
 import 'cambridge.dart';
 
+part 'writing_extra_data.dart';
+
 enum TextType {
   essay('Essay'),
   article('Article'),
@@ -35,9 +37,11 @@ class WritingTask {
     required this.checklist,
     this.notes = const [],
     this.register,
+    this.title,
   });
 
   final String id;
+  final String? title;
   final ExamLevel level;
 
   /// 1 is the compulsory task, 2 is the one you choose.
@@ -388,6 +392,7 @@ final List<WritingTask> writingTasks = [
       '220–260 words.',
     ],
   ),
+  ...extraWritingTasks,
 ];
 
 List<WritingTask> writingTasksFor(ExamLevel level) =>

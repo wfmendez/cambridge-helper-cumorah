@@ -1,0 +1,24 @@
+name: Capture mobile references
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.1
+          cache: true
+      - run: flutter pub get
+      - run: flutter test test/movil_test.dart --update-goldens
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mobile-references
+          path: test/goldens/*.png

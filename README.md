@@ -16,18 +16,25 @@ it, and the name should not suggest otherwise.
   grouped by topic, plus a glossary of every exam task type with a worked
   example of each. What a *cloze* is, what a *gapped text* is, what
   *multiple matching* means.
-- **Mock test** — sit the paper on paper, type your answers in, and it marks
+- **Written for Cíl** — eight original B2 papers: four Use of English and
+  four Reading, with 208 questions, included passages and an explanation for
+  every answer. Filter by skill; attempt history remains separate per paper.
+- **Mock test** — sit the official paper on paper, type your answers in, and it marks
   them part by part. B1 Preliminary, B2 First sample paper 2 and the C1
   Advanced sample paper from the official handbook. The Listening audio is
   Cambridge's, so the app points at where to download it rather than shipping
   a copy. After marking, every answer has feedback for correct, incorrect,
-  partial or unanswered responses. The 52 original Cíl questions explain the
+  partial or unanswered responses. The original Cíl questions explain the
   language rule or textual evidence; official papers provide review guidance
   for the source PDF or audio. This feedback works offline.
-- **Writing** — 14 original tasks with commented model answers: 3 at B1,
-  6 at B2 and 5 at C1. A paper-white editor, live word count, clock and saved
+- **Writing** — 22 original tasks with commented model answers: 5 at B1,
+  10 at B2 and 7 at C1. A paper-white editor, live word count, clock and saved
   drafts. Optional AI reviews explain corrections, estimate the four writing
   subscales and suggest next steps without replacing the original answer.
+- **Free listening** — 12 direct British Council lesson links, four each at
+  B1, B2 and C1, with audio, transcripts and exercises on the publisher’s site.
+  Open them from Mock test. They need internet; audio is not redistributed.
+  Native apps open the device browser and offer a copyable link as a fallback.
 - **Speaking** — a timer per part, a prompt that shuffles, and the phrases
   examiners are listening for, including ways to open an answer.
 - **The exam** — how each paper works, what it weighs, how it is scored, and

@@ -27,6 +27,7 @@ import '../vocab_data.dart';
 import 'progress.dart';
 import 'vocab.dart';
 import 'writing.dart';
+import 'listening_library.dart';
 
 /// Cambridge preparation: practice with explanations, mocks that mark
 /// themselves, and a guide to the exam.
@@ -1050,6 +1051,67 @@ class _Simulacros extends StatefulWidget {
 class _SimulacrosState extends State<_Simulacros> {
   ExamLevel? _meta;
   ExamLevel _nivel = ExamLevel.b2;
+  String _cilSkill = 'All papers';
+
+  Iterable<ExamPaper> get _cilPapers => cambridgePapers.where(
+    (paper) =>
+        paper.source == PaperSource.cil &&
+        (_cilSkill == 'All papers' ||
+            (_cilSkill == 'Reading'
+                ? paper.id.endsWith('-reading')
+                : paper.id.endsWith('-use-of-english'))),
+  );
+
+  Widget _cilTools(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final skill in ['All papers', 'Use of English', 'Reading'])
+            ChoiceChip(
+              label: Text(skill),
+              selected: _cilSkill == skill,
+              onSelected: (_) => setState(() => _cilSkill = skill),
+            ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Text(
+        '${_cilPapers.length} B2 papers · '
+        '${_cilPapers.fold<int>(0, (total, paper) => total + paper.questions)} '
+        'questions · every answer explained',
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          TextButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => WritingScreen(level: AppScope.of(context).goal),
+              ),
+            ),
+            icon: const Icon(Icons.edit_note),
+            label: const Text('Writing models'),
+          ),
+          TextButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ListeningLibrary(level: AppScope.of(context).goal),
+              ),
+            ),
+            icon: const Icon(Icons.headphones_outlined),
+            label: const Text('Free listening · 12 lessons'),
+          ),
+        ],
+      ),
+    ],
+  );
 
   @override
   void didChangeDependencies() {
@@ -1102,12 +1164,12 @@ class _SimulacrosState extends State<_Simulacros> {
           'with the format and marking of the exam.',
         ),
         const SizedBox(height: 16),
+        _cilTools(context),
+        const SizedBox(height: 12),
         Rejilla(
           maxColumnas: 2,
           children: [
-            for (final paper in cambridgePapers.where(
-              (p) => p.source == PaperSource.cil,
-            ))
+            for (final paper in _cilPapers)
               _FilaPrueba(paper: paper, state: state),
           ],
         ),
@@ -1181,9 +1243,9 @@ class _SimulacrosState extends State<_Simulacros> {
           child: ContentCard(
             color: theme.colorScheme.surfaceContainerLowest,
             child: Text(
-              'Do the paper on paper, timed, exactly as in the real exam. Then '
-              'type your answers in here and it marks them instantly, part by '
-              'part, so you can see where the marks went.',
+              'Choose an original Cíl paper to practise entirely in the app, '
+              'or use an official Cambridge booklet. Correct your answers '
+              'afterwards to see your score and what to review.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 height: 1.45,
@@ -1199,25 +1261,30 @@ class _SimulacrosState extends State<_Simulacros> {
                 'Written for Cíl · text included',
                 color: cambridgeReadable(cambridgeGreen, theme.colorScheme),
               ),
-          explicacion: ContentCard(
-            color: cambridgeGreen.withValues(alpha: 0.06),
-            border: cambridgeGreen.withValues(alpha: 0.3),
-            child: Text(
-              'These are ours, so the texts are in the app: you can sit them on '
-              'the phone with nothing else open. Same shapes and same marks as '
-              'the real thing, but not Cambridge material.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                height: 1.45,
+          explicacion: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ContentCard(
+                color: cambridgeGreen.withValues(alpha: 0.06),
+                border: cambridgeGreen.withValues(alpha: 0.3),
+                child: Text(
+                  'These are ours, so the texts are in the app: you can sit them on '
+                  'the phone with nothing else open. Same shapes and same marks as '
+                  'the real thing, but not Cambridge material.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.45,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              _cilTools(context),
+            ],
           ),
           separacionIntro: 10,
           maxColumnas: 2,
           children: [
-            for (final paper in cambridgePapers.where(
-              (p) => p.source == PaperSource.cil,
-            ))
+            for (final paper in _cilPapers)
               _FilaPrueba(paper: paper, state: state),
           ],
         ),
