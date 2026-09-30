@@ -29,7 +29,12 @@ enum PaperSource {
 /// One question as it appears on the page. Only Cíl's own papers carry these:
 /// for official papers the text stays in the PDF.
 class ExamItem {
-  const ExamItem({required this.number, this.stem, this.options = const []});
+  const ExamItem({
+    required this.number,
+    this.stem,
+    this.options = const [],
+    this.explanation,
+  });
 
   final int number;
 
@@ -37,6 +42,9 @@ class ExamItem {
   final String? stem;
 
   final List<String> options;
+
+  /// Shown only after marking, with the evidence or language rule to review.
+  final String? explanation;
 }
 
 /// The three exams in play, in the order you climb them. The order matters:
@@ -356,42 +364,47 @@ List<PartResult> markPaper(ExamPaper paper, Map<int, String> responses) {
     final wrong = <int>[];
 
     for (var q = part.from; q <= part.to; q++) {
-      final clave = part.answers[q];
-      if (clave == null) continue;
-      final dada = responses[q] ?? '';
-
-      if (part.type == AnswerType.transformation) {
-        final ganados = _puntosTransformacion(dada, clave);
-        marks += ganados;
-        if (ganados < part.marksPerQuestion) wrong.add(q);
-      } else if (isCorrect(dada, clave)) {
-        marks += part.marksPerQuestion;
-      } else {
-        wrong.add(q);
-      }
+      final earned = marksForAnswer(part, q, responses[q] ?? '');
+      if (earned == null) continue;
+      marks += earned;
+      if (earned < part.marksPerQuestion) wrong.add(q);
     }
     out.add(PartResult(part: part, marks: marks, wrong: wrong));
   }
   return out;
 }
 
+/// Shared by the total score and the feedback beside each answer.
+/// A missing key cannot be graded; it must not appear as a correct answer.
+int? marksForAnswer(ExamPart part, int question, String response) {
+  final key = part.answers[question];
+  if (key == null) return null;
+  if (part.type == AnswerType.transformation) {
+    return _puntosTransformacion(response, key);
+  }
+  return isCorrect(response, key) ? part.marksPerQuestion : 0;
+}
+
 /// A transformation is two halves split by `|`, one mark each.
 int _puntosTransformacion(String respuesta, String clave) {
   if (_normalizar(respuesta).isEmpty) return 0;
 
+  var best = 0;
   for (final alternativa in clave.split(' OR ')) {
     final mitades = alternativa.split('|');
     if (mitades.length != 2) {
-      return isCorrect(respuesta, alternativa) ? 2 : 0;
+      if (isCorrect(respuesta, alternativa)) return 2;
+      continue;
     }
     final dada = _normalizar(respuesta);
     var ganados = 0;
     for (final mitad in mitades) {
-      if (_variantes(mitad).any((v) => v.isNotEmpty && dada.contains(v))) {
+      if (_variantes(mitad).any((v) => ' $dada '.contains(' $v '))) {
         ganados++;
       }
     }
-    if (ganados > 0) return ganados;
+    if (ganados == 2) return 2;
+    if (ganados > best) best = ganados;
   }
-  return 0;
+  return best;
 }

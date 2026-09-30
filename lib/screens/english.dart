@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../disposicion.dart';
 
 import '../cambridge.dart';
+import '../answer_feedback.dart';
 import '../cambridge_data.dart';
 import '../brand.dart';
 import '../cambridge_guide.dart';
@@ -1741,19 +1742,12 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
                 rellenoCompacto: EdgeInsets.zero,
                 children: [
                   for (var q = part.from; q <= part.to; q++)
-                    _FilaPregunta(
+                    ExamAnswerField(
+                      part: part,
                       number: q,
-                      item: part.itemFor(q),
-                      control: _campos[q]!,
-                      clave: part.answers[q],
-                      corregida: res != null,
-                      fallada:
-                          res
-                              ?.firstWhere((r) => r.part == part)
-                              .wrong
-                              .contains(q) ??
-                          false,
-                      ancho: part.type == AnswerType.transformation,
+                      controller: _campos[q]!,
+                      graded: res != null,
+                      isListening: widget.paper.id.contains('listening'),
                     ),
                 ],
               ),
@@ -1766,125 +1760,6 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _FilaPregunta extends StatelessWidget {
-  const _FilaPregunta({
-    required this.number,
-    required this.control,
-    this.item,
-    required this.clave,
-    required this.corregida,
-    required this.fallada,
-    required this.ancho,
-  });
-
-  final int number;
-
-  /// Only Cíl's own papers carry the question itself; official ones leave it
-  /// in the booklet.
-  final ExamItem? item;
-
-  final TextEditingController control;
-  final String? clave;
-  final bool corregida;
-  final bool fallada;
-  final bool ancho;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = !corregida
-        ? theme.colorScheme.outlineVariant
-        : (fallada ? theme.colorScheme.error : cambridgeGreen);
-
-    final item = this.item;
-    final conTexto = item?.stem != null && item!.stem != '$number';
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: conTexto ? 18 : 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // El enunciado solo existe en los exámenes propios; en los oficiales
-          // vive en el cuadernillo y aquí solo va el número.
-          if (conTexto)
-            Padding(
-              padding: const EdgeInsets.only(left: 30, bottom: 6),
-              child: Text(
-                item.stem!,
-                style: const TextStyle(
-                  color: paperInk,
-                  height: 1.55,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          if (item != null && item.options.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 30, bottom: 8),
-              child: Wrap(
-                spacing: 14,
-                runSpacing: 4,
-                children: [
-                  for (final (i, o) in item.options.indexed)
-                    Text(
-                      '${String.fromCharCode(65 + i)}  $o',
-                      style: const TextStyle(color: paperInk, fontSize: 14),
-                    ),
-                ],
-              ),
-            ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 30,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    '$number',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: control,
-                  enabled: !corregida,
-                  autocorrect: false,
-                  maxLines: ancho ? 2 : 1,
-                  textCapitalization: TextCapitalization.none,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: color),
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: color, width: 1.6),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (corregida && fallada && clave != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 30, top: 4),
-              child: Text(
-                'Answer: $clave',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: cambridgeGreen,
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }

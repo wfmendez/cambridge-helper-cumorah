@@ -68,6 +68,7 @@ const ExamPaper cilPaper2 = ExamPaper(
       items: [
         ExamItem(
           number: 31,
+          explanation: "In the first paragraph, Ana says yes mainly to have something to think about on a Sunday. That supports an interest outside her boring job, not a plan to earn money.",
           stem: '31  Why did Ana agree to repair her friend’s sea chart?',
           options: [
             'She wanted to prove her chemical training was useful.',
@@ -78,6 +79,7 @@ const ExamPaper cilPaper2 = ExamPaper(
         ),
         ExamItem(
           number: 32,
+          explanation: "She calls the first result “clumsy” and keeps the photo “as a corrective”. It reminds her to stay critical of her work instead of becoming satisfied with it.",
           stem: '32  Why does Ana keep a photograph of her first restoration?',
           options: [
             'It reminds her of how much she has improved.',
@@ -88,6 +90,7 @@ const ExamPaper cilPaper2 = ExamPaper(
         ),
         ExamItem(
           number: 33,
+          explanation: "The text says collectors struggle to accept that a map should be left alone. Some damage records the object’s history and should not be repaired.",
           stem:
               '33  What does Ana say is difficult about working with '
               'collectors?',
@@ -100,6 +103,7 @@ const ExamPaper cilPaper2 = ExamPaper(
         ),
         ExamItem(
           number: 34,
+          explanation: "“Which” refers back to museums arriving with their decisions already made. The next example shows the difficulty: a museum insisted on removing annotations.",
           stem:
               '34  What does “which brings its own difficulties” in the '
               'fourth paragraph refer to?',
@@ -112,6 +116,7 @@ const ExamPaper cilPaper2 = ExamPaper(
         ),
         ExamItem(
           number: 35,
+          explanation: "Ana says the annotations were the only evidence that anyone had used the map. She refused to erase that evidence, even though she lost the contract.",
           stem: '35  Why did Ana refuse the museum commission?',
           options: [
             'The annotations proved the map had been used.',
@@ -122,6 +127,7 @@ const ExamPaper cilPaper2 = ExamPaper(
         ),
         ExamItem(
           number: 36,
+          explanation: "The last paragraph contrasts long-term restoration with packaging work whose condition after fifty years did not matter. The clue is durability, not a difference in scientific knowledge.",
           stem:
               '36  What does Ana suggest about her old job in the final '
               'paragraph?',
@@ -188,12 +194,36 @@ const ExamPaper cilPaper2 = ExamPaper(
           'G  Their concern is that the word “bee” hides an important '
           'distinction.',
       items: [
-        ExamItem(number: 37, stem: '37'),
-        ExamItem(number: 38, stem: '38'),
-        ExamItem(number: 39, stem: '39'),
-        ExamItem(number: 40, stem: '40'),
-        ExamItem(number: 41, stem: '41'),
-        ExamItem(number: 42, stem: '42'),
+        ExamItem(
+          number: 37,
+          explanation: "“The shift” in E refers to the change from an unlikely city hobby to hives on many rooftops. It completes the opening contrast between ten years ago and today.",
+          stem: '37',
+        ),
+        ExamItem(
+          number: 38,
+          explanation: "“In return” in D links the bees’ modest needs to the honey they produce. The comparison with rural honey leads into the next sentence about countryside harvests.",
+          stem: '38',
+        ),
+        ExamItem(
+          number: 39,
+          explanation: "C contrasts a city’s long flowering season with a field that offers food for only three weeks. “By contrast” connects the two settings directly.",
+          stem: '39',
+        ),
+        ExamItem(
+          number: 40,
+          explanation: "“Their concern” in G refers to the people who doubt that more hives are the answer. The following sentence explains the distinction: managed honeybees versus wild bees.",
+          stem: '40',
+        ),
+        ExamItem(
+          number: 41,
+          explanation: "B proposes planting for pollinators instead of keeping them. The next sentence develops that point by contrasting a hive with a meadow that feeds many insects.",
+          stem: '41',
+        ),
+        ExamItem(
+          number: 42,
+          explanation: "“The guidance” in A refers to the city recommendations just mentioned. Its lack of legal weight explains why rooftops are still filling up despite those recommendations.",
+          stem: '42',
+        ),
       ],
       answers: {37: 'E', 38: 'D', 39: 'C', 40: 'G', 41: 'B', 42: 'A'},
     ),
@@ -252,60 +282,70 @@ const ExamPaper cilPaper2 = ExamPaper(
       items: [
         ExamItem(
           number: 43,
+          explanation: "Tomás says his family repeatedly called the change “a phase”, which made his first year harder. This is the explicit reference to family doubts.",
           stem:
               '43  Which person had their decision '
               'questioned by their family?',
         ),
         ExamItem(
           number: 44,
+          explanation: "Paul says his pay is comparable and slightly better once the hours are counted. That extra detail about hours identifies D.",
           stem:
-              '44  Which person says their earnings '
-              'barely changed?',
+              '44  Which person says their pay is slightly better '
+              'when working hours are considered?',
         ),
         ExamItem(
           number: 45,
+          explanation: "Miriam was fifteen years older than her classmates but already knew how to stay calm while someone shouted at her. She explicitly calls this an advantage.",
           stem:
               '45  Which person mentions an advantage '
               'their younger classmates lacked?',
         ),
         ExamItem(
           number: 46,
+          explanation: "Paul describes everyone as supportive, then says he found that “almost annoying”. This directly matches approval that felt irritating.",
           stem:
               '46  Which person found other people’s '
               'approval slightly irritating?',
         ),
         ExamItem(
           number: 47,
+          explanation: "Miriam misses colleagues who could sit still long enough for a conversation. The clue concerns the social environment of her previous workplace.",
           stem:
               '47  Which person misses something about '
               'their old working environment?',
         ),
         ExamItem(
           number: 48,
+          explanation: "Paul says he left because his knees failed and would probably still be a chef otherwise. His health forced the career change.",
           stem:
               '48  Which person says the change was '
               'forced on them physically?',
         ),
         ExamItem(
           number: 49,
+          explanation: "Tomás still tries to optimise lesson plans as if they were a production line. His engineering habits continue in his teaching work.",
           stem:
               '49  Which person says old habits of '
               'thought have stayed with them?',
         ),
         ExamItem(
           number: 50,
+          explanation: "Greta says the decision took about four years and one bad winter. This directly answers the question about taking years to decide.",
           stem:
               '50  Which person took several years to '
               'decide?',
         ),
         ExamItem(
           number: 51,
+          explanation: "Tomás was moved into management and discovered that he disliked being responsible for adults. The unwanted promotion was his reason for leaving.",
           stem:
               '51  Which person had been promoted into '
               'work they did not enjoy?',
         ),
         ExamItem(
           number: 52,
+          explanation: "Miriam describes the pay cut as severe and says she has never regretted it. Both the lower income and the absence of regret are stated together.",
           stem:
               '52  Which person accepted a much lower '
               'income without regret?',
