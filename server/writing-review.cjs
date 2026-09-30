@@ -7,7 +7,21 @@ const object = properties => ({
 });
 const string = { type: 'string' };
 const strings = { type: 'array', items: string };
+const relevances = ['on-task', 'partly', 'off-task'];
+const statuses = ['covered', 'partly', 'missing'];
+// Whether the answer does what the task asked, checked point by point, and —
+// when it does not — how it could. Cambridge's Content scale asks exactly
+// this, and a learner who answered a different question needs to hear it
+// before anything about their grammar.
+const taskResponse = object({
+  relevance: { type: 'string', enum: relevances },
+  points: { type: 'array', items: object({
+    point: string, status: { type: 'string', enum: statuses }, evidence: string,
+  }) },
+  redirect: object({ explanation: string, plan: strings, opening: string }),
+});
 const schema = object({
+  taskResponse,
   summary: string,
   criteria: object(Object.fromEntries(criteria.map(name => [name, object({
     score: { type: 'integer', enum: [0, 1, 2, 3, 4, 5] }, reason: string,
@@ -29,7 +43,28 @@ Check all required task points, purpose, reader, genre, register, structure, ran
 For C1 Part 1 evaluate the two selected points and the justified priority, not all three.
 For B1 the target is ABOUT 100 words; do not invent a rigid word-count penalty.
 Do not automatically subtract marks solely because an answer misses its word target.
-If it is off-topic, a copied prompt or mostly instructions, say so and reflect it in Content.
+
+TASK RESPONSE — decide this first: does the answer do what the task asks?
+In taskResponse.points list each content point the task explicitly REQUIRES, taken from the
+instructions and the question (for example: the food, the atmosphere, a recommendation).
+The checklist mixes requirements with advice. Style tips — a title, varied adjectives, a word
+count — are advice, not content points: never list them, never treat a missing tip as a missing
+point. For C1 Part 1 the points are the two notes the writer chose and the justified priority.
+For each point give its status, covered, partly or missing, and as evidence copy a short phrase
+from the answer EXACTLY, under 20 words, that shows it. Use an empty string when it is missing.
+Set relevance to on-task when every point is covered, partly when some are missing or thin,
+and off-task when the answer is about something else or answers a different question; a copied
+prompt or mostly instructions is off-task. Reflect partly and off-task answers in Content.
+When relevance is not on-task, fill taskResponse.redirect so the learner sees how THEIR answer
+could meet the task: explanation, one or two sentences on what the task asks and what the answer
+did instead, without blame; plan, 2–5 short steps, one per paragraph or missing point, each saying
+what to write; opening, one example first sentence at the target level. Build on the learner's
+own ideas, people and experiences wherever they can be bridged to the task, rather than replacing
+them. Never write the whole answer. When relevance is on-task, leave explanation and opening as
+empty strings and plan as an empty list.
+correctedText fixes the English of what was written; it does not repair the task response —
+that is what redirect is for.
+
 Give a short summary, 1–3 strengths and 1–3 practical next steps. Avoid generic praise.
 Select up to 8 important genuine language errors. Quote each original EXACTLY from the answer,
 with its replacement and a brief explanation. Use an empty list if there are no errors.
@@ -68,6 +103,42 @@ function nonempty(value, max) {
   return typeof value === 'string' && value.trim().length > 0 && value.length <= max;
 }
 
+function validateTaskResponse(value, text) {
+  const redirect = value?.redirect;
+  if (!value || !relevances.includes(value.relevance) || !Array.isArray(value.points) ||
+      value.points.length < 1 || value.points.length > 6 ||
+      !value.points.every(p => p && nonempty(p.point, 300) && statuses.includes(p.status) &&
+        typeof p.evidence === 'string') ||
+      !redirect || typeof redirect.explanation !== 'string' || typeof redirect.opening !== 'string' ||
+      !Array.isArray(redirect.plan) || !redirect.plan.every(step => typeof step === 'string')) {
+    throw new ReviewError(502, 'The review was incomplete. Please try again.');
+  }
+  // Una cita que no está en el texto no se enseña, pero tampoco tumba la
+  // revisión: se pierde la cita y el punto se queda. Las correcciones sí se
+  // rechazan enteras, porque esas se aplican al texto; esto solo se lee.
+  const points = value.points.map(({point, status, evidence}) => ({
+    point, status,
+    evidence: status !== 'missing' && evidence.trim() && evidence.length <= 300 &&
+      text.includes(evidence) ? evidence : '',
+  }));
+  const empty = {explanation: '', plan: [], opening: ''};
+  if (value.relevance === 'on-task') {
+    // "Responde a la tarea" con un punto sin cubrir se contradice en pantalla.
+    // Se baja a parcial; sin sugerencia, porque el modelo no escribió una y la
+    // lista de puntos ya dice qué falta.
+    const complete = points.every(p => p.status === 'covered');
+    return {relevance: complete ? 'on-task' : 'partly', points, redirect: empty};
+  }
+  const plan = redirect.plan.filter(step => nonempty(step, 600)).slice(0, 5);
+  if (!nonempty(redirect.explanation, 1000) || !plan.length) {
+    throw new ReviewError(502, 'The review was incomplete. Please try again.');
+  }
+  return {relevance: value.relevance, points, redirect: {
+    explanation: redirect.explanation, plan,
+    opening: nonempty(redirect.opening, 600) ? redirect.opening : '',
+  }};
+}
+
 function validateFeedback(value, text) {
   if (!value || !nonempty(value.summary, 1500) || !nonempty(value.correctedText, 12000) ||
       !criteria.every(name => Number.isInteger(value.criteria?.[name]?.score) &&
@@ -81,6 +152,7 @@ function validateFeedback(value, text) {
     throw new ReviewError(502, 'The review was incomplete. Please try again.');
   }
   return {
+    taskResponse: validateTaskResponse(value.taskResponse, text),
     summary: value.summary,
     criteria: criteria.map(name => ({ name, score: value.criteria[name].score, reason: value.criteria[name].reason })),
     strengths: value.strengths.slice(0, 3), improvements: value.improvements.slice(0, 3),
@@ -98,6 +170,9 @@ async function review(input, {env, fetchImpl}) {
   for (const provider of providers) {
     try {
       const groq = provider === 'Groq';
+      // 6144 tokens de salida: en gpt-oss el razonamiento cuenta dentro del
+      // mismo límite, y una respuesta cortada se rechaza entera y se paga el
+      // respaldo. Solo se cobra lo que de verdad se genera.
       const response = await fetchImpl(groq
         ? 'https://api.groq.com/openai/v1/chat/completions'
         : 'https://api.anthropic.com/v1/messages', {
@@ -107,12 +182,12 @@ async function review(input, {env, fetchImpl}) {
           : {'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01'},
         body: JSON.stringify(groq ? {
           model: env.GROQ_WRITING_MODEL || 'openai/gpt-oss-120b',
-          max_completion_tokens: 4096, reasoning_effort: 'medium',
+          max_completion_tokens: 6144, reasoning_effort: 'medium',
           messages: [{role: 'system', content: system}, {role: 'user', content: user}],
           response_format: {type: 'json_schema', json_schema: {name: 'writing_review', strict: true, schema}},
         } : {
           model: env.ANTHROPIC_WRITING_MODEL || 'claude-haiku-4-5-20251001',
-          max_tokens: 4096, system, messages: [{role: 'user', content: user}],
+          max_tokens: 6144, system, messages: [{role: 'user', content: user}],
           output_config: {format: {type: 'json_schema', schema}},
         }),
       });

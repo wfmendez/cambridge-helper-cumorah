@@ -23,8 +23,76 @@ class WritingCorrection {
   final String explanation;
 }
 
+/// Whether the answer does what the task asked. Cambridge's Content scale
+/// asks this before anything else, and so does the review screen: a learner
+/// who answered a different question needs to hear that before any grammar.
+enum TaskRelevance { onTask, partly, offTask }
+
+enum PointStatus { covered, partly, missing }
+
+class TaskPoint {
+  const TaskPoint(this.point, this.status, this.evidence);
+  final String point;
+  final PointStatus status;
+
+  /// A phrase copied from the answer that shows the point, or empty. The
+  /// server drops any quotation that is not really in the answer.
+  final String evidence;
+}
+
+/// How the answer could meet the task, built on the learner's own ideas.
+/// Empty when the answer already does.
+class TaskRedirect {
+  const TaskRedirect(this.explanation, this.plan, this.opening);
+  final String explanation;
+  final List<String> plan;
+  final String opening;
+  bool get isEmpty => explanation.isEmpty && plan.isEmpty;
+}
+
+class TaskResponse {
+  const TaskResponse(this.relevance, this.points, this.redirect);
+  final TaskRelevance relevance;
+  final List<TaskPoint> points;
+  final TaskRedirect redirect;
+
+  /// Null when it is missing or not understood. A server from before this
+  /// existed, or one from after it changes, should cost the learner this one
+  /// section — not the whole review.
+  static TaskResponse? tryParse(dynamic json) {
+    try {
+      final relevance = switch (json['relevance']) {
+        'on-task' => TaskRelevance.onTask,
+        'partly' => TaskRelevance.partly,
+        'off-task' => TaskRelevance.offTask,
+        _ => throw const FormatException(),
+      };
+      final points = [
+        for (final p in json['points'] as List)
+          TaskPoint(p['point'] as String, switch (p['status']) {
+            'covered' => PointStatus.covered,
+            'partly' => PointStatus.partly,
+            'missing' => PointStatus.missing,
+            _ => throw const FormatException(),
+          }, p['evidence'] as String),
+      ];
+      final r = json['redirect'];
+      return TaskResponse(
+        relevance,
+        points,
+        TaskRedirect(r['explanation'] as String, [
+          for (final step in r['plan'] as List) step as String,
+        ], r['opening'] as String),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 class WritingFeedback {
   const WritingFeedback({
+    this.taskResponse,
     required this.summary,
     required this.criteria,
     required this.strengths,
@@ -34,6 +102,7 @@ class WritingFeedback {
     required this.provider,
   });
 
+  final TaskResponse? taskResponse;
   final String summary;
   final List<WritingCriterionFeedback> criteria;
   final List<String> strengths;
@@ -74,6 +143,7 @@ class WritingFeedback {
       throw const FormatException();
     }
     return WritingFeedback(
+      taskResponse: TaskResponse.tryParse(json['taskResponse']),
       summary: text(json['summary']),
       criteria: criteria,
       strengths: texts(json['strengths']),

@@ -42,6 +42,49 @@ Map<String, dynamic> response() => {
   'provider': 'Groq',
 };
 
+Map<String, dynamic> fueraDeTema() => response()
+  ..['taskResponse'] = {
+    'relevance': 'off-task',
+    'points': [
+      {'point': 'Describe the food', 'status': 'missing', 'evidence': ''},
+      {
+        'point': 'Say which way of learning works better',
+        'status': 'partly',
+        'evidence': 'students learn better with a teacher',
+      },
+    ],
+    'redirect': {
+      'explanation': 'The task asks about a restaurant; this is about a film.',
+      'plan': [
+        'Name the place and who you went with.',
+        'Describe the food and the atmosphere.',
+        'Say whether you would recommend it.',
+      ],
+      'opening': 'Last Friday my brother and I had dinner at a small place.',
+    },
+  };
+
+/// La pantalla de revisión entera, en una ventana lo bastante alta para que la
+/// lista construya todo sin tener que hacer scroll.
+Future<void> revision(WidgetTester tester, Map<String, dynamic> data) async {
+  tester.view.physicalSize = const Size(900, 5000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  final state = await AppState.open();
+  await tester.pumpWidget(
+    AppScope(
+      state: state,
+      child: MaterialApp(
+        home: WritingFeedbackScreen(
+          feedback: WritingFeedback.fromJson(data),
+          original: draft,
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 WritingReviewClient client(Future<http.Response> Function(http.Request) send) =>
     WritingReviewClient(
       client: MockClient(send),
@@ -117,6 +160,87 @@ void main() {
       }
     },
   );
+
+  test('the task response is read, and losing it costs only that section', () {
+    final leida = WritingFeedback.fromJson(fueraDeTema()).taskResponse!;
+    expect(leida.relevance, TaskRelevance.offTask);
+    expect(leida.points.map((p) => p.status), [
+      PointStatus.missing,
+      PointStatus.partly,
+    ]);
+    expect(leida.redirect.plan, hasLength(3));
+    expect(leida.redirect.isEmpty, isFalse);
+
+    // Un servidor anterior no la manda; uno futuro podría cambiarla.
+    for (final data in [
+      response(),
+      response()..['taskResponse'] = {'relevance': 'maybe'},
+    ]) {
+      final feedback = WritingFeedback.fromJson(data);
+      expect(feedback.taskResponse, isNull);
+      expect(feedback.summary, 'Develop the argument about cost.');
+    }
+  });
+
+  testWidgets('an off-task answer leads with the task and a way back to it', (
+    tester,
+  ) async {
+    await revision(tester, fueraDeTema());
+
+    expect(find.text('Did it answer the task?'), findsOneWidget);
+    expect(find.text('Not yet — it answers a different question.'), findsOne);
+    expect(find.text('Missing'), findsOneWidget);
+    expect(
+      find.text('Partly · “students learn better with a teacher”'),
+      findsOneWidget,
+    );
+    expect(find.text('How it could answer the task'), findsOneWidget);
+    expect(find.text('Describe the food and the atmosphere.'), findsOneWidget);
+    expect(
+      find.text('Last Friday my brother and I had dinner at a small place.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('does not make it answer the task'), findsOne);
+
+    // Antes que las notas: es lo primero que hay que leer.
+    expect(
+      tester.getTopLeft(find.text('Did it answer the task?')).dy,
+      lessThan(tester.getTopLeft(find.text('Content · 3/5')).dy),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('an answer on task says so and suggests no detour', (
+    tester,
+  ) async {
+    await revision(
+      tester,
+      response()
+        ..['taskResponse'] = {
+          'relevance': 'on-task',
+          'points': [
+            {
+              'point': 'Say which way of learning works better',
+              'status': 'covered',
+              'evidence': 'students learn better with a teacher',
+            },
+          ],
+          'redirect': {'explanation': '', 'plan': [], 'opening': ''},
+        },
+    );
+    expect(find.text('Yes — it answers the task.'), findsOneWidget);
+    expect(find.text('How it could answer the task'), findsNothing);
+    expect(find.textContaining('This fixes the English'), findsNothing);
+  });
+
+  testWidgets('a review from an older server looks as it did before', (
+    tester,
+  ) async {
+    await revision(tester, response());
+    expect(find.text('Did it answer the task?'), findsNothing);
+    expect(find.text('Content · 3/5'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   test(
     'rate limits, connection errors and timeouts have useful messages',

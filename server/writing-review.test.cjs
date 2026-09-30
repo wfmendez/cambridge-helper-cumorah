@@ -6,7 +6,11 @@ const {createHandler, createLimiter, validateFeedback} = require('./writing-revi
 const draft = 'I think students learn better with a teacher because they can ask questions. Online lessons are cheaper, but it is easy to lose attention. Working with classmates also helps me understand difficult ideas.';
 const body = {taskId: 'b2-p1-tech', text: draft};
 function feedback() {
-  return {summary: 'Clear position; develop each argument.',
+  return {taskResponse: {relevance: 'on-task',
+    points: [{point: 'Say which way of learning works better', status: 'covered',
+      evidence: 'students learn better with a teacher'}],
+    redirect: {explanation: '', plan: [], opening: ''}},
+  summary: 'Clear position; develop each argument.',
     criteria: Object.fromEntries(['Content', 'Communicative Achievement', 'Organisation', 'Language']
       .map(name => [name, {score: 3, reason: 'The argument is understandable but brief.'}])),
     strengths: ['A clear position.'], improvements: ['Develop the cost argument.'],
@@ -34,7 +38,7 @@ test('Groq receives the server task, not a client rubric, with bounded structure
     assert.equal(init.headers.Authorization, 'Bearer test-key');
     const sent = JSON.parse(init.body);
     assert.equal(sent.response_format.json_schema.strict, true);
-    assert.equal(sent.max_completion_tokens, 4096);
+    assert.equal(sent.max_completion_tokens, 6144);
     const payload = JSON.parse(sent.messages[1].content);
     assert.equal(payload.task.level, 'B2');
     assert.equal(payload.answer, draft);
@@ -86,6 +90,67 @@ test('invalid, invented and truncated feedback never reaches the learner', async
     const handler = createHandler({env: {GROQ_API_KEY: 'test'}, fetchImpl: async () => response});
     assert.equal((await request(handler)).statusCode, 503);
   }
+});
+
+test('providers are asked for the task response, and told what it is for', async () => {
+  let sent;
+  const handler = createHandler({env: {GROQ_API_KEY: 'test'}, fetchImpl: async (url, init) => {
+    sent = JSON.parse(init.body);
+    return provider();
+  }});
+  await request(handler);
+  const schema = sent.response_format.json_schema.schema;
+  assert.ok(schema.required.includes('taskResponse'));
+  assert.deepEqual(schema.properties.taskResponse.properties.relevance.enum,
+    ['on-task', 'partly', 'off-task']);
+  const system = sent.messages[0].content;
+  assert.match(system, /TASK RESPONSE/);
+  assert.match(system, /never treat a missing tip as a missing\s+point/);
+  assert.match(system, /Never write the whole answer/);
+});
+
+test('task evidence that is not in the answer is dropped, not shown', () => {
+  const value = feedback();
+  value.taskResponse.points = [
+    {point: 'The teacher', status: 'covered', evidence: 'students learn better with a teacher'},
+    {point: 'Cost', status: 'partly', evidence: 'a quotation the learner never wrote'},
+    {point: 'A conclusion', status: 'missing', evidence: 'leftover text'},
+  ];
+  value.taskResponse.relevance = 'partly';
+  value.taskResponse.redirect = {explanation: 'Add a conclusion.', plan: ['End with your view.'], opening: ''};
+  const points = validateFeedback(value, draft).taskResponse.points;
+  assert.equal(points[0].evidence, 'students learn better with a teacher');
+  assert.equal(points[1].evidence, '');
+  assert.equal(points[2].evidence, '');
+  assert.equal(points.length, 3);
+});
+
+test('"on task" with an uncovered point is shown as partly, never as a contradiction', () => {
+  const value = feedback();
+  value.taskResponse.points.push({point: 'A recommendation', status: 'missing', evidence: ''});
+  value.taskResponse.redirect = {explanation: 'stray', plan: ['stray'], opening: 'stray'};
+  const result = validateFeedback(value, draft).taskResponse;
+  assert.equal(result.relevance, 'partly');
+  assert.deepEqual(result.redirect, {explanation: '', plan: [], opening: ''});
+});
+
+test('an off-task answer must come with a way back to the task', () => {
+  const off = feedback();
+  off.taskResponse = {relevance: 'off-task',
+    points: [{point: 'The food', status: 'missing', evidence: ''}],
+    redirect: {explanation: '', plan: [], opening: ''}};
+  assert.throws(() => validateFeedback(off, draft));
+
+  off.taskResponse.redirect = {
+    explanation: 'The task asks about a restaurant; this is about a film.',
+    plan: ['1', '2', '3', '4', '5', '6', '  '], opening: 'Last Friday my brother and I had dinner at…'};
+  const result = validateFeedback(off, draft).taskResponse;
+  assert.equal(result.relevance, 'off-task');
+  assert.equal(result.redirect.plan.length, 5);
+  assert.equal(result.redirect.opening, 'Last Friday my brother and I had dinner at…');
+
+  const missing = feedback(); delete missing.taskResponse;
+  assert.throws(() => validateFeedback(missing, draft));
 });
 
 test('malformed output triggers a single fallback', async () => {
