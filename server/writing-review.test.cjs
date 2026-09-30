@@ -153,6 +153,25 @@ test('an off-task answer must come with a way back to the task', () => {
   assert.throws(() => validateFeedback(missing, draft));
 });
 
+test('a failed provider is logged with the phase that failed, never the text', async () => {
+  const lines = [];
+  const original = console.warn;
+  console.warn = (...args) => lines.push(args.join(' '));
+  try {
+    const empty = feedback(); empty.strengths = [];
+    const cut = new Response(JSON.stringify({choices: [{finish_reason: 'length', message: {content: '{'}}]}));
+    const broken = new Response(JSON.stringify({choices: [{finish_reason: 'stop', message: {content: '{not json'}}]}));
+    for (const response of [provider(empty), cut, broken, provider('a string, not a review')]) {
+      await request(createHandler({env: {GROQ_API_KEY: 'test'}, fetchImpl: async () => response}));
+    }
+  } finally { console.warn = original; }
+  assert.match(lines[0], /Groq 502 strengths$/);
+  assert.match(lines[1], /Groq 502 finish:length$/);
+  assert.match(lines[2], /Groq 502 json$/);
+  assert.match(lines[3], /Groq 502 not-an-object$/);
+  assert.ok(lines.every(line => !line.includes('teacher') && !line.includes('test')));
+});
+
 test('malformed output triggers a single fallback', async () => {
   let calls = 0;
   const handler = createHandler({env: {GROQ_API_KEY: 'test', ANTHROPIC_API_KEY: 'test'}, fetchImpl: async () => {

@@ -92,8 +92,11 @@ All explanations must be clear English accessible to a learner at the target lev
 Return only the JSON specified by the schema, without markdown.`;
 
 class ReviewError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  // reason solo va al log: dice en qué fase falló un proveedor, nunca el texto.
+  constructor(status, message, reason) { super(message); this.status = status; this.reason = reason; }
 }
+
+const incomplete = reason => new ReviewError(502, 'The review was incomplete. Please try again.', reason);
 
 function validateInput(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
@@ -122,7 +125,7 @@ function validateTaskResponse(value, text) {
         typeof p.evidence === 'string') ||
       !redirect || typeof redirect.explanation !== 'string' || typeof redirect.opening !== 'string' ||
       !Array.isArray(redirect.plan) || !redirect.plan.every(step => typeof step === 'string')) {
-    throw new ReviewError(502, 'The review was incomplete. Please try again.');
+    throw incomplete('taskResponse');
   }
   // Una cita que no está en el texto no se enseña, pero tampoco tumba la
   // revisión: se pierde la cita y el punto se queda. Las correcciones sí se
@@ -141,9 +144,7 @@ function validateTaskResponse(value, text) {
     return {relevance: complete ? 'on-task' : 'partly', points, redirect: empty};
   }
   const plan = redirect.plan.filter(step => nonempty(step, 600)).slice(0, 5);
-  if (!nonempty(redirect.explanation, 1000) || !plan.length) {
-    throw new ReviewError(502, 'The review was incomplete. Please try again.');
-  }
+  if (!nonempty(redirect.explanation, 1000) || !plan.length) throw incomplete('redirect');
   return {relevance: value.relevance, points, redirect: {
     explanation: redirect.explanation, plan,
     opening: nonempty(redirect.opening, 600) ? redirect.opening : '',
@@ -151,17 +152,27 @@ function validateTaskResponse(value, text) {
 }
 
 function validateFeedback(value, text) {
-  if (!value || !nonempty(value.summary, 1500) || !nonempty(value.correctedText, 12000) ||
-      !criteria.every(name => Number.isInteger(value.criteria?.[name]?.score) &&
-        value.criteria[name].score >= 0 && value.criteria[name].score <= 5 &&
-        nonempty(value.criteria[name].reason, 2000)) ||
-      !['strengths', 'improvements'].every(key => Array.isArray(value[key]) &&
-        value[key].length >= 1 && value[key].length <= 5 && value[key].every(v => nonempty(v, 1500))) ||
-      !Array.isArray(value.corrections) || value.corrections.length > 12 ||
-      !value.corrections.every(c => c && nonempty(c.original, 1000) &&
-        nonempty(c.replacement, 1500) && nonempty(c.explanation, 1500) && text.includes(c.original))) {
-    throw new ReviewError(502, 'The review was incomplete. Please try again.');
-  }
+  const list = key => Array.isArray(value[key]) && value[key].length >= 1 &&
+    value[key].length <= 5 && value[key].every(v => nonempty(v, 1500));
+  const correction = c => c && nonempty(c.original, 1000) &&
+    nonempty(c.replacement, 1500) && nonempty(c.explanation, 1500);
+  // Comprobaciones con nombre para que el log diga cuál falló: con una sola
+  // condición gigante, "502" no distingue una lista vacía de una cita inventada.
+  const checks = [
+    ['summary', () => nonempty(value.summary, 1500)],
+    ['correctedText', () => nonempty(value.correctedText, 12000)],
+    ['criteria', () => criteria.every(name => Number.isInteger(value.criteria?.[name]?.score) &&
+      value.criteria[name].score >= 0 && value.criteria[name].score <= 5 &&
+      nonempty(value.criteria[name].reason, 2000))],
+    ['strengths', () => list('strengths')],
+    ['improvements', () => list('improvements')],
+    ['corrections', () => Array.isArray(value.corrections) && value.corrections.length <= 12 &&
+      value.corrections.every(correction)],
+    ['corrections-not-in-text', () => value.corrections.every(c => text.includes(c.original))],
+  ];
+  if (!value || typeof value !== 'object') throw incomplete('not-an-object');
+  const failed = checks.find(([, ok]) => !ok());
+  if (failed) throw incomplete(failed[0]);
   return {
     taskResponse: validateTaskResponse(value.taskResponse, text),
     summary: value.summary,
@@ -202,15 +213,20 @@ async function review(input, {env, fetchImpl}) {
           output_config: {format: {type: 'json_schema', schema}},
         }),
       });
-      if (!response.ok) throw new ReviewError(response.status, 'Provider unavailable');
+      if (!response.ok) throw new ReviewError(response.status, 'Provider unavailable', 'http');
       const data = await response.json();
-      const complete = groq ? data.choices?.[0]?.finish_reason === 'stop' : data.stop_reason === 'end_turn';
-      if (!complete) throw new ReviewError(502, 'Incomplete provider response');
+      const finish = groq ? data.choices?.[0]?.finish_reason : data.stop_reason;
+      // "length" o "max_tokens" aquí significa que el límite de salida se quedó corto.
+      if (finish !== (groq ? 'stop' : 'end_turn')) throw incomplete(`finish:${finish}`);
       const raw = groq ? data.choices[0].message.content : data.content?.find(c => c.type === 'text')?.text;
-      return { ...validateFeedback(JSON.parse(raw), input.text), provider, wordCount: input.words };
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch { throw incomplete('json'); }
+      return { ...validateFeedback(parsed, input.text), provider, wordCount: input.words };
     } catch (error) {
-      // Nunca registrar textos, claves ni el cuerpo de errores del proveedor.
-      console.warn('Writing review provider failed', provider, error.status || error.name);
+      // Nunca registrar textos, claves ni el cuerpo de errores del proveedor:
+      // solo quién falló, el código y en qué fase.
+      console.warn('Writing review provider failed', provider, error.status || error.name,
+        error.reason || '');
     }
   }
   throw new ReviewError(503, 'The review service is temporarily unavailable. Please try again later. Your draft is safe.');
