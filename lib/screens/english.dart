@@ -853,9 +853,7 @@ class _SesionPracticaState extends State<_SesionPractica> {
                         Text(
                           _acertado ? 'Correct' : 'Not quite',
                           style: theme.textTheme.titleSmall?.copyWith(
-                            color: _acertado
-                                ? okGreen(theme.colorScheme)
-                                : warnAmber(theme.colorScheme),
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -935,7 +933,11 @@ class _PracticeComplete extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.replay_rounded),
-              label: Text('Try these ${missed.length} again'),
+              label: Text(
+                missed.length == 1
+                    ? 'Try this question again'
+                    : 'Try ${missed.length} questions again',
+              ),
             ),
             const SizedBox(height: 10),
           ],

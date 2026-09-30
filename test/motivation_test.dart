@@ -197,8 +197,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Practice complete'), findsOneWidget);
     expect(state.todayQuestions, 1);
-    await tester.ensureVisible(find.text('Try these 1 again'));
-    await tester.tap(find.text('Try these 1 again'));
+    await tester.ensureVisible(find.text('Try this question again'));
+    await tester.tap(find.text('Try this question again'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('was made'));
     await tester.pump();
