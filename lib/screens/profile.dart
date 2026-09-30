@@ -140,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ExamLevel _level = ExamLevel.b2;
   DateTime? _date;
   int _daily = 5;
-  bool _sounds = false;
+  bool _sounds = true;
   bool _effects = true;
   bool _loaded = false;
   bool _saving = false;

@@ -7,7 +7,7 @@ class LearnerProfile {
     this.reason = '',
     this.targetDate,
     this.dailyQuestions = 5,
-    this.sounds = false,
+    this.sounds = true,
     this.effects = true,
     this.reminderHour = 18,
     this.reminderMinute = 0,
@@ -59,7 +59,7 @@ class LearnerProfile {
           ? null
           : DateTime(parsed.year, parsed.month, parsed.day),
       dailyQuestions: number('dailyQuestions', 5, 1, 50),
-      sounds: data['sounds'] == true,
+      sounds: data['sounds'] != false,
       effects: data['effects'] != false,
       reminderHour: number('reminderHour', 18, 0, 23),
       reminderMinute: number('reminderMinute', 0, 0, 59),
