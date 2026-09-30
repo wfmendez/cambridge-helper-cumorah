@@ -181,15 +181,14 @@ const ExamPaper _listening = ExamPaper(
   // same way B1 and C1 already do it. It used to be bundled, which was
   // defensible while the app was an APK passed between classmates and is not
   // once it is a public URL.
-  audioFrom:
-      'https://www.cambridgeenglish.org/exams-and-tests/first/preparation/',
+  audioFrom: 'https://www.cambridgeenglish.org/Images/178516-b2-first-sample-paper-2.zip',
   whereToFind:
-      'B2 First sample paper 2 Listening — the questions are in the '
-      'PDF and the audio is on the Cambridge site.',
+      'B2 First sample paper 2 Listening — download the official ZIP below '
+      'for the question PDF and all four audio tracks.',
   level: ExamLevel.b2,
   name: 'Listening',
   minutes: 40,
-  file: 'B2 First sample paper 2 Listening.pdf',
+  file: 'B2 First sample paper 2 Listening 2022.pdf',
   note:
       'Everything is played twice. In Part 2, anything shown in brackets in '
       'the key does not have to be written.',

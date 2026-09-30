@@ -17,6 +17,7 @@ import '../widgets.dart';
 import '../encouragement.dart';
 import 'profile.dart';
 import 'descargas.dart';
+import 'enlace.dart';
 import 'player.dart';
 import 'speaking.dart';
 import 'task_types.dart';
@@ -2076,6 +2077,7 @@ class _SinAudio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final archive = Uri.parse(paper.audioFrom!).path.endsWith('.zip');
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(14),
@@ -2087,26 +2089,38 @@ class _SinAudio extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.headset_off_rounded, size: 18, color: paperInk),
-              SizedBox(width: 8),
-              Text(
-                'The recording is not in the app',
-                style: TextStyle(
-                  color: paperInk,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+              const Icon(Icons.headset_off_rounded, size: 18, color: paperInk),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  archive
+                      ? 'Get the Listening PDF and audio'
+                      : 'The recording is not in the app',
+                  style: const TextStyle(
+                    color: paperInk,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Cambridge gives this audio away on its own site, but only from '
-            'there. Download it once, play it from your phone, and type your '
-            'answers in here to be marked.',
-            style: TextStyle(color: paperGrey, fontSize: 13, height: 1.45),
+          Text(
+            archive
+                ? 'Download and extract the official Cambridge ZIP. Open '
+                      '"${paper.file}" and play the four Listening MP3 files '
+                      '(Parts 1–4) in order. Enter your answers here to be marked.'
+                : 'Cambridge gives this audio away on its own site, but only '
+                      'from there. Download it once, play it from your phone, '
+                      'and type your answers in here to be marked.',
+            style: const TextStyle(
+              color: paperGrey,
+              fontSize: 13,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 10),
           SelectableText(
@@ -2114,11 +2128,37 @@ class _SinAudio extends StatelessWidget {
             style: const TextStyle(color: paperInk, fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: 6),
-          OutlinedButton.icon(
-            onPressed: () =>
-                copyToClipboard(context, paper.audioFrom!, 'Address copied'),
-            icon: const Icon(Icons.copy_rounded, size: 16),
-            label: const Text('Copy the address'),
+          Wrap(
+            spacing: 10,
+            runSpacing: 6,
+            children: [
+              if (kIsWeb)
+                FilledButton.icon(
+                  onPressed: () => abrirEnlace(paper.audioFrom!),
+                  icon: Icon(
+                    archive
+                        ? Icons.download_rounded
+                        : Icons.open_in_new_rounded,
+                    size: 16,
+                  ),
+                  label: Text(
+                    archive
+                        ? 'Download PDF & audio (ZIP)'
+                        : 'Open Cambridge page',
+                  ),
+                ),
+              OutlinedButton.icon(
+                onPressed: () => copyToClipboard(
+                  context,
+                  paper.audioFrom!,
+                  'Address copied',
+                ),
+                icon: const Icon(Icons.copy_rounded, size: 16),
+                label: Text(
+                  archive ? 'Copy download link' : 'Copy the address',
+                ),
+              ),
+            ],
           ),
         ],
       ),
