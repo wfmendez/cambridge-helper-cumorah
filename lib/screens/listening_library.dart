@@ -118,6 +118,7 @@ class _ListeningLibraryState extends State<ListeningLibrary> {
                             label: const Text('Open lesson'),
                           ),
                           TextButton.icon(
+                            key: ValueKey('listening-copy-${resource.slug}'),
                             onPressed: () => copyToClipboard(
                               context,
                               resource.url,

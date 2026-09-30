@@ -1110,7 +1110,7 @@ const extraCilPapers = <ExamPaper>[
             "themselves. (42) ___ A service that starts small and continues is more useful than an "
             "ambitious plan that disappears after a week.\n\nTHE MISSING SENTENCES\n\nA  For the "
             "children, the journey was becoming an experience rather than just a distance to cover.\nB"
-            "  A new crossing was therefore installed by the school children themselves.\nC  The "
+            "  The school also had a small car park beside its main entrance.\nC  The "
             "solution was to recruit a small backup team.\nD  The parents simply could not be in two "
             "places at once.\nE  Locally, it is known as the walking bus.\nF  They have learnt that "
             "reliability has to come before expansion.\nG  They changed the route to use a quieter "

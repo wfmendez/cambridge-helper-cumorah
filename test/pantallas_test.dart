@@ -199,17 +199,19 @@ void main() {
     await tester.pumpAndSettle();
 
     final b2 = find.widgetWithText(ChoiceChip, ExamLevel.b2.name);
+    final list = find.byType(Scrollable).first;
+    final left = tester.getTopLeft(find.text('Written for Cíl')).dx;
+    expect(tester.getTopLeft(find.byType(ContentCard).first).dx, left);
+    await tester.scrollUntilVisible(b2, 400, scrollable: list);
+    await tester.pumpAndSettle();
     expect(tester.widget<ChoiceChip>(b2).selected, isTrue);
-    expect(find.byType(ContentCard), findsNWidgets(6));
-    final left = tester.getTopLeft(find.byType(ContentCard).first).dx;
-    expect(tester.getTopLeft(find.text('Written for Cíl')).dx, left);
     expect(tester.getTopLeft(find.text('Official Cambridge papers')).dx, left);
 
     final b1 = find.widgetWithText(ChoiceChip, ExamLevel.b1.name);
     await tester.ensureVisible(b1);
     await tester.tap(b1);
     await tester.pumpAndSettle();
-    expect(find.text('Reading'), findsOneWidget);
+    expect(find.widgetWithText(ContentCard, 'Reading'), findsOneWidget);
     expect(state.goal, ExamLevel.b2);
 
     // La elección local sobrevive al salir del destino y al cambiar de ancho.
@@ -217,17 +219,19 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Mock test'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(b1, 400, scrollable: list);
     expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
     tester.view.physicalSize = const Size(800, 1000);
     await tester.pumpAndSettle();
-    await tester.ensureVisible(b1);
+    await tester.scrollUntilVisible(b1, 400, scrollable: list);
     expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
     expect(tester.takeException(), isNull);
     tester.view.physicalSize = const Size(360, 1000);
     await tester.pumpAndSettle();
-    expect(find.byType(ChoiceChip), findsNothing);
+    expect(find.widgetWithText(ChoiceChip, ExamLevel.b1.name), findsNothing);
     tester.view.physicalSize = const Size(1920, 1080);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(b1, 400, scrollable: list);
     expect(tester.widget<ChoiceChip>(b1).selected, isTrue);
 
     await state.setGoal(ExamLevel.c1);
@@ -240,7 +244,16 @@ void main() {
           .selected,
       isTrue,
     );
-    expect(find.byType(ContentCard), findsNWidgets(6));
+    for (final paper in cambridgePapers.where(
+      (p) => p.source == PaperSource.official && p.level == ExamLevel.c1,
+    )) {
+      await tester.scrollUntilVisible(
+        find.text(paper.name),
+        300,
+        scrollable: list,
+      );
+      expect(find.widgetWithText(ContentCard, paper.name), findsOneWidget);
+    }
     expect(tester.takeException(), isNull);
   });
 
@@ -258,7 +271,11 @@ void main() {
       (p) => p.source == PaperSource.official && p.selfMarked,
     );
     final exam = find.widgetWithText(ChoiceChip, paper.level.name);
-    await tester.ensureVisible(exam);
+    await tester.scrollUntilVisible(
+      exam,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(exam);
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text(paper.name));

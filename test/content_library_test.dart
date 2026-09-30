@@ -157,7 +157,10 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Cíl Paper 1 · Use of English'), findsNothing);
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Use of English'));
+      final useOfEnglish = find.widgetWithText(ChoiceChip, 'Use of English');
+      await tester.ensureVisible(useOfEnglish);
+      await tester.pumpAndSettle();
+      await tester.tap(useOfEnglish);
       await tester.pumpAndSettle();
       expect(
         find.text('4 B2 papers · 120 questions · every answer explained'),
@@ -205,12 +208,15 @@ void main() {
         const MaterialApp(home: ListeningLibrary(level: ExamLevel.b2)),
       );
       await tester.pumpAndSettle();
+      final copy = find.byKey(
+        const ValueKey('listening-copy-business-interview'),
+      );
       await tester.scrollUntilVisible(
-        find.text('Copy link').first,
+        copy,
         300,
         scrollable: find.byType(Scrollable).first,
       );
-      await tester.tap(find.text('Copy link').first);
+      await tester.tap(copy);
       await tester.pump();
       expect(
         copied,
