@@ -211,11 +211,17 @@ void main() {
       final copy = find.byKey(
         const ValueKey('listening-copy-business-interview'),
       );
-      await tester.scrollUntilVisible(
-        copy,
-        300,
-        scrollable: find.byType(Scrollable).first,
-      );
+      // Wait for the lazy list to lay out the lesson before tapping it.
+      // At large text sizes the introduction and filters fill a viewport.
+      for (
+        var attempts = 0;
+        copy.hitTestable().evaluate().isEmpty && attempts < 12;
+        attempts++
+      ) {
+        await tester.drag(find.byType(ListView), const Offset(0, -250));
+        await tester.pumpAndSettle();
+      }
+      expect(copy.hitTestable(), findsOneWidget);
       await tester.tap(copy);
       await tester.pump();
       expect(

@@ -247,12 +247,9 @@ void main() {
     for (final paper in cambridgePapers.where(
       (p) => p.source == PaperSource.official && p.level == ExamLevel.c1,
     )) {
-      await tester.scrollUntilVisible(
-        find.text(paper.name),
-        300,
-        scrollable: list,
-      );
-      expect(find.widgetWithText(ContentCard, paper.name), findsOneWidget);
+      final card = find.widgetWithText(ContentCard, paper.name);
+      await tester.scrollUntilVisible(card, 300, scrollable: list);
+      expect(card, findsOneWidget);
     }
     expect(tester.takeException(), isNull);
   });
