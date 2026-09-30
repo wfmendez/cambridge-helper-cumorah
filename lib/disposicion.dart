@@ -18,17 +18,22 @@ class Pagina extends StatelessWidget {
     required this.children,
     required this.padding,
     this.ancho = anchoMenu,
+    this.primary = true,
   });
 
   final List<Widget> children;
   final EdgeInsets padding;
   final double ancho;
+  final bool primary;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final margen = (constraints.maxWidth - ancho) / 2;
       return ListView(
+        // Desktop does not inherit the route's scroll controller by default.
+        // Connect it so arrows and Page Up/Down also work from the app bar.
+        primary: primary,
         padding: padding.copyWith(
           left: math.max(padding.left, margen),
           right: math.max(padding.right, margen),

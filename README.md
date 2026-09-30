@@ -82,6 +82,12 @@ must use the same key to update installed copies. Local signing material in
 
 ## Pick your goal
 
+On a laptop, use Up/Down and Page Up/Page Down to scroll the current page.
+Each main tab keeps its own scroll position. Tab and Shift+Tab move between
+controls; inside a text field, arrow keys move the cursor instead of the page.
+In the Writing editor, page scrolling starts with the task prompt, while keys
+inside the draft retain their normal editing behaviour.
+
 The three chips at the top — **PET**, **FCE** and **CAE** — set what you are working
 towards, and the choice sticks. It is not decorative: aiming at B2 hides the C1
 material, which would only be a distraction until you get there. Aiming at C1

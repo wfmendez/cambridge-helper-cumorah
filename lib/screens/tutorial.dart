@@ -174,7 +174,8 @@ class _PantallaTutorialState extends State<PantallaTutorial> {
                 controller: _paginas,
                 itemCount: pasosTutorial.length,
                 onPageChanged: (i) => setState(() => _indice = i),
-                itemBuilder: (_, i) => _Pagina(paso: pasosTutorial[i]),
+                itemBuilder: (_, i) =>
+                    _Pagina(paso: pasosTutorial[i], active: i == _indice),
               ),
             ),
             Centrado(
@@ -218,9 +219,10 @@ class _PantallaTutorialState extends State<PantallaTutorial> {
 }
 
 class _Pagina extends StatelessWidget {
-  const _Pagina({required this.paso});
+  const _Pagina({required this.paso, required this.active});
 
   final PasoTutorial paso;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -228,6 +230,7 @@ class _Pagina extends StatelessWidget {
     final colour = cambridgeReadable(paso.colour, theme.colorScheme);
 
     return Pagina(
+      primary: active,
       ancho: anchoLectura,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       children: [

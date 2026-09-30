@@ -10,6 +10,7 @@ library;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'state.dart';
 import 'screens/english.dart';
@@ -43,6 +44,15 @@ class CilApp extends StatelessWidget {
           theme: lightTheme(),
           darkTheme: darkTheme(),
           themeMode: state.themeMode,
+          shortcuts: {
+            ...WidgetsApp.defaultShortcuts,
+            // Match web scrolling on laptops running the native app too.
+            // EditableText and controls keep their more local key bindings.
+            const SingleActivator(LogicalKeyboardKey.arrowUp):
+                const ScrollIntent(direction: AxisDirection.up),
+            const SingleActivator(LogicalKeyboardKey.arrowDown):
+                const ScrollIntent(direction: AxisDirection.down),
+          },
           home: const _Inicio(),
         ),
       ),

@@ -47,6 +47,7 @@ class EnglishScreen extends StatefulWidget {
 class _EnglishScreenState extends State<EnglishScreen>
     with WidgetsBindingObserver {
   int _destino = 0;
+  final _scrolls = List.generate(_destinos.length, (_) => ScrollController());
 
   @override
   void initState() {
@@ -57,6 +58,9 @@ class _EnglishScreenState extends State<EnglishScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    for (final controller in _scrolls) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -78,78 +82,94 @@ class _EnglishScreenState extends State<EnglishScreen>
   Widget build(BuildContext context) {
     final state = AppScope.of(context);
     final amplio = MediaQuery.sizeOf(context).width >= corteAmplio;
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        // La columna y el IndexedStack conservan su sitio al cambiar de ancho.
-        child: Row(
-          children: [
-            if (amplio) ...[
-              NavigationRail(
-                labelType: NavigationRailLabelType.all,
-                selectedIndex: _destino,
-                onDestinationSelected: (i) => setState(() => _destino = i),
-                destinations: [
-                  for (final (icono, seleccionado, etiqueta) in _destinos)
-                    NavigationRailDestination(
-                      icon: Icon(icono),
-                      selectedIcon: Icon(seleccionado),
-                      label: Text(etiqueta),
-                    ),
-                ],
-              ),
-              const VerticalDivider(width: 1),
-            ],
-            Expanded(
-              child: Column(
-                children: [
-                  Centrado(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Cabecera(
-                          subtitulo: 'Cambridge certification practice',
-                          trailing: _AccionesCabecera(),
+    return PrimaryScrollController(
+      controller: _scrolls[_destino],
+      child: Focus(
+        autofocus: true,
+        skipTraversal: true,
+        child: Scaffold(
+          body: SafeArea(
+            bottom: false,
+            // La columna y el IndexedStack conservan su sitio al cambiar de ancho.
+            child: Row(
+              children: [
+                if (amplio) ...[
+                  NavigationRail(
+                    labelType: NavigationRailLabelType.all,
+                    selectedIndex: _destino,
+                    onDestinationSelected: (i) => setState(() => _destino = i),
+                    destinations: [
+                      for (final (icono, seleccionado, etiqueta) in _destinos)
+                        NavigationRailDestination(
+                          icon: Icon(icono),
+                          selectedIcon: Icon(seleccionado),
+                          label: Text(etiqueta),
                         ),
-                        const SizedBox(height: 10),
-                        const _GoalPicker(),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
+                    ],
                   ),
-                  Expanded(
-                    child: IndexedStack(
-                      index: _destino,
-                      children: [
-                        const _Practica(),
-                        WritingBody(level: state.goal),
-                        const SpeakingBody(),
-                        const _Simulacros(),
-                        const ProgressTab(),
-                      ],
-                    ),
-                  ),
+                  const VerticalDivider(width: 1),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: amplio
-          ? null
-          : NavigationBar(
-              selectedIndex: _destino,
-              onDestinationSelected: (i) => setState(() => _destino = i),
-              destinations: [
-                for (final (icono, seleccionado, etiqueta) in _destinos)
-                  NavigationDestination(
-                    icon: Icon(icono),
-                    selectedIcon: Icon(seleccionado),
-                    label: etiqueta,
+                Expanded(
+                  child: Column(
+                    children: [
+                      Centrado(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Cabecera(
+                              subtitulo: 'Cambridge certification practice',
+                              trailing: _AccionesCabecera(),
+                            ),
+                            const SizedBox(height: 10),
+                            const _GoalPicker(),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: IndexedStack(
+                          index: _destino,
+                          children: [
+                            for (final (index, page) in <Widget>[
+                              const _Practica(),
+                              WritingBody(level: state.goal),
+                              const SpeakingBody(),
+                              const _Simulacros(),
+                              const ProgressTab(),
+                            ].indexed)
+                              PrimaryScrollController(
+                                controller: _scrolls[index],
+                                child: ExcludeFocus(
+                                  excluding: index != _destino,
+                                  child: page,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
+          ),
+          bottomNavigationBar: amplio
+              ? null
+              : NavigationBar(
+                  selectedIndex: _destino,
+                  onDestinationSelected: (i) => setState(() => _destino = i),
+                  destinations: [
+                    for (final (icono, seleccionado, etiqueta) in _destinos)
+                      NavigationDestination(
+                        icon: Icon(icono),
+                        selectedIcon: Icon(seleccionado),
+                        label: etiqueta,
+                      ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

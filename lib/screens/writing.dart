@@ -160,7 +160,6 @@ class _WritingEditorState extends State<WritingEditor> {
   bool _taskOpen = true;
   final _hojaKey = GlobalKey();
   final _editorKey = GlobalKey();
-  final _scrollConsigna = ScrollController();
   late final WritingReviewClient _reviewClient;
   late AppState _state;
   bool _loaded = false;
@@ -205,7 +204,6 @@ class _WritingEditorState extends State<WritingEditor> {
     _reviewClient.close();
     _feedbackSounds.dispose();
     _text.dispose();
-    _scrollConsigna.dispose();
     super.dispose();
   }
 
@@ -480,6 +478,7 @@ class _WritingEditorState extends State<WritingEditor> {
             final editor = LayoutBuilder(
               key: _editorKey,
               builder: (context, area) => SingleChildScrollView(
+                primary: false,
                 child: SizedBox(
                   height: math.max(
                     area.maxHeight,
@@ -497,9 +496,8 @@ class _WritingEditorState extends State<WritingEditor> {
                     Expanded(
                       flex: 2,
                       child: Scrollbar(
-                        controller: _scrollConsigna,
                         child: SingleChildScrollView(
-                          controller: _scrollConsigna,
+                          primary: true,
                           child: hoja,
                         ),
                       ),
@@ -518,10 +516,7 @@ class _WritingEditorState extends State<WritingEditor> {
                     constraints: BoxConstraints(
                       maxHeight: constraints.maxHeight * 0.48,
                     ),
-                    child: SingleChildScrollView(
-                      controller: _scrollConsigna,
-                      child: hoja,
-                    ),
+                    child: SingleChildScrollView(primary: true, child: hoja),
                   ),
                   Expanded(child: editor),
                 ],
