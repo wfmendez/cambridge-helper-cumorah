@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../brand.dart';
 import '../cambridge.dart';
 import '../disposicion.dart';
 import '../encouragement.dart';
 import '../learner_profile.dart';
+import '../motivation_art.dart';
 import '../state.dart';
 import '../widgets.dart';
 import '../reminders.dart';
@@ -35,7 +35,13 @@ class GoalCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                MarcaCil(size: 38, color: theme.colorScheme.primary),
+                MotivationArt(
+                  scene: done
+                      ? MotivationScene.celebration
+                      : MotivationScene.journey,
+                  width: 80,
+                  height: 72,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -368,9 +374,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SectionTitle('Encouragement'),
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Celebration effects'),
+            title: const Text('Illustrations & animations'),
             subtitle: const Text(
-              'Brief animations for your wins. Respects reduced motion.',
+              'Gentle motion for celebrations and encouragement. Turn off for still illustrations.',
             ),
             value: _effects,
             onChanged: (value) => setState(() => _effects = value),

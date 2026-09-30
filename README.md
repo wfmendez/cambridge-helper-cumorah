@@ -33,8 +33,11 @@ it, and the name should not suggest otherwise.
   exam level and daily practice target, saved locally and included in backups.
   The goal appears on Practice and Progress; wrong answers count as practice.
 - **Encouragement** — personal feedback after answers, gentle explanations
-  after mistakes, and a session summary with a retry deck. Brief celebrations
-  respect reduced motion. Original soft chimes are optional and off by default.
+  after mistakes, and a session summary with a retry deck. Original illustrations
+  pair a medal with achievements, a growing shoot with encouragement, and a
+  paper plane with your goal. Each animation runs once, respects reduced motion,
+  and becomes a still illustration when effects are off. Original soft chimes
+  are optional and off by default.
 - **Reminders** — optional daily Android notifications, scheduled on-device
   with notification permission and restored after reboot. Web and portable
   Windows builds offer a repeating calendar file with an alert; users must

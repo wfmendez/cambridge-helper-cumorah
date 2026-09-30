@@ -4,6 +4,7 @@ import 'package:cil/cambridge.dart';
 import 'package:cil/encouragement.dart';
 import 'package:cil/learner_profile.dart';
 import 'package:cil/main.dart';
+import 'package:cil/motivation_art.dart';
 import 'package:cil/screens/profile.dart';
 import 'package:cil/state.dart';
 import 'package:cil/theme.dart';
@@ -234,4 +235,133 @@ void main() {
     expect(find.text('Well done'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'illustrations finish, and disabling effects stops motion immediately',
+    (tester) async {
+      final state = await AppState.open();
+      await tester.pumpWidget(
+        AppScope(
+          state: state,
+          child: MaterialApp(
+            home: Scaffold(
+              body: Row(
+                children: [
+                  for (final scene in MotivationScene.values)
+                    MotivationArt(scene: scene),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(tester.binding.hasScheduledFrame, true);
+      await state.saveProfile(const LearnerProfile(effects: false));
+      await tester.pump();
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, false);
+      expect(find.byType(MotivationArt), findsNWidgets(3));
+      await state.saveProfile(const LearnerProfile(effects: true));
+      await tester.pump();
+      expect(tester.binding.hasScheduledFrame, false);
+      // A fresh illustration can animate, but never loops indefinitely.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        AppScope(
+          state: state,
+          child: const MaterialApp(
+            home: Scaffold(body: MotivationArt(scene: MotivationScene.growth)),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(tester.binding.hasScheduledFrame, true);
+      await tester.pump(const Duration(seconds: 2));
+      expect(tester.binding.hasScheduledFrame, false);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'all artwork stays still with reduced motion or an inactive tab',
+    (tester) async {
+      final state = await AppState.open();
+      for (final reducedMotion in [true, false]) {
+        await tester.pumpWidget(
+          AppScope(
+            state: state,
+            child: MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(disableAnimations: reducedMotion),
+                child: TickerMode(
+                  enabled: reducedMotion,
+                  child: Scaffold(
+                    body: Row(
+                      children: [
+                        for (final scene in MotivationScene.values)
+                          MotivationArt(scene: scene),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(tester.binding.hasScheduledFrame, false);
+        expect(find.byType(MotivationArt), findsNWidgets(3));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      }
+    },
+  );
+
+  testWidgets(
+    'illustrated feedback fits small screens and enlarged text in both themes',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final state = await AppState.open();
+      for (final theme in [lightTheme(), darkTheme()]) {
+        for (final scale in [1.0, 2.0]) {
+          await tester.pumpWidget(
+            AppScope(
+              state: state,
+              child: MaterialApp(
+                theme: theme,
+                home: MediaQuery(
+                  data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                  child: const Scaffold(
+                    body: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          GoalCard(),
+                          EncouragementCard(
+                            title: 'Well done, Ana',
+                            message: 'You made time for your goal today.',
+                            celebrate: true,
+                          ),
+                          EncouragementCard(
+                            title: 'Keep going, Ana',
+                            message: 'Every attempt is a step forward.',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          expect(find.text('Well done, Ana'), findsOneWidget);
+          expect(find.text('Keep going, Ana'), findsOneWidget);
+        }
+      }
+    },
+  );
 }

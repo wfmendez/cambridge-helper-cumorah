@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
-import 'brand.dart';
-import 'state.dart';
+import 'motivation_art.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -101,11 +99,16 @@ class EncouragementCard extends StatelessWidget {
             dark: const Color(0xFF86EFAC),
           )
         : theme.colorScheme.onSecondaryContainer;
-    final animate =
-        celebrate &&
-        AppScope.of(context).profile.effects &&
-        !MediaQuery.disableAnimationsOf(context) &&
-        TickerMode.valuesOf(context).enabled;
+    final art = MotivationArt(
+      scene: celebrate ? MotivationScene.celebration : MotivationScene.growth,
+      width: 112,
+      height: 96,
+    );
+    final heading = Text(
+      title,
+      style: theme.textTheme.titleLarge?.copyWith(color: colour),
+    );
+    final body = Text(message, style: theme.textTheme.bodyMedium);
     return Semantics(
       liveRegion: true,
       child: ContentCard(
@@ -113,69 +116,45 @@ class EncouragementCard extends StatelessWidget {
             ? colour.withValues(alpha: 0.07)
             : theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
         border: colour.withValues(alpha: 0.25),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (celebrate)
-              ExcludeSemantics(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: animate ? 0 : 1, end: 1),
-                  duration: Duration(milliseconds: animate ? 900 : 0),
-                  builder: (_, value, child) => SizedBox(
-                    height: 68,
-                    width: double.infinity,
-                    child: CustomPaint(
-                      painter: _CelebrationPainter(value, colour),
-                      child: Center(child: child),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final largeText = MediaQuery.textScalerOf(context).scale(16) > 22;
+            if (constraints.maxWidth >= 480 && !largeText) {
+              return Row(
+                children: [
+                  art,
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [heading, const SizedBox(height: 8), body],
                     ),
                   ),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    color: colour,
-                    size: 32,
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (largeText) ...[
+                  Center(child: art),
+                  const SizedBox(height: 8),
+                  heading,
+                ] else
+                  Row(
+                    children: [
+                      art,
+                      const SizedBox(width: 12),
+                      Expanded(child: heading),
+                    ],
                   ),
-                ),
-              ),
-            Text(
-              title,
-              style: theme.textTheme.titleLarge?.copyWith(color: colour),
-            ),
-            const SizedBox(height: 8),
-            Text(message, style: theme.textTheme.bodyMedium),
-          ],
+                const SizedBox(height: 8),
+                body,
+              ],
+            );
+          },
         ),
       ),
     );
   }
-}
-
-class _CelebrationPainter extends CustomPainter {
-  _CelebrationPainter(this.progress, this.colour);
-  final double progress;
-  final Color colour;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0 || progress >= 1) return;
-    final centre = Offset(size.width / 2, size.height / 2);
-    for (var i = 0; i < 12; i++) {
-      final angle = i * math.pi / 6;
-      final radius = 20 + 30 * Curves.easeOut.transform(progress);
-      final offset = Offset(
-        math.cos(angle) * radius * 1.6,
-        math.sin(angle) * radius * 0.55,
-      );
-      final paint = Paint()
-        ..color = (i.isEven ? colour : cilGold).withValues(
-          alpha: (1 - progress) * 0.85,
-        )
-        ..strokeWidth = 3
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(centre + offset, centre + offset * 1.12, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_CelebrationPainter old) =>
-      progress != old.progress || colour != old.colour;
 }

@@ -919,7 +919,7 @@ class _PracticeComplete extends StatelessWidget {
             message:
                 '$correct of $total correct. '
                 '${missed.isEmpty ? 'Take a moment to enjoy what you have learned.' : 'The questions you missed are a useful guide for your next practice.'}',
-            celebrate: true,
+            celebrate: total > 0 && correct / total >= 0.7,
           ),
           const SizedBox(height: 20),
           const GoalCard(),
@@ -1611,7 +1611,9 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
                   AppScope.of(context).profile.name,
                 ),
                 message: 'Finishing a practice paper takes commitment. Pick one area to work on next — you can build from here.',
-                celebrate: true,
+                celebrate:
+                    res.fold<int>(0, (sum, part) => sum + part.marks) >=
+                    widget.paper.maxMarks * 0.7,
               ),
               const SizedBox(height: 12),
               _Marcador(result: res, paper: widget.paper),
