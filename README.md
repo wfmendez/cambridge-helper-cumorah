@@ -20,7 +20,10 @@ it, and the name should not suggest otherwise.
   them part by part. B1 Preliminary, B2 First sample paper 2 and the C1
   Advanced sample paper from the official handbook. The Listening audio is
   Cambridge's, so the app points at where to download it rather than shipping
-  a copy.
+  a copy. After marking, every answer has feedback for correct, incorrect,
+  partial or unanswered responses. The 52 original Cíl questions explain the
+  language rule or textual evidence; official papers provide review guidance
+  for the source PDF or audio. This feedback works offline.
 - **Writing** — 14 original tasks with commented model answers: 3 at B1,
   6 at B2 and 5 at C1. A paper-white editor, live word count, clock and saved
   drafts. Optional AI reviews explain corrections, estimate the four writing
@@ -37,7 +40,7 @@ it, and the name should not suggest otherwise.
   pair a medal with achievements, a growing shoot with encouragement, and a
   paper plane with your goal. Each animation runs once, respects reduced motion,
   and becomes a still illustration when effects are off. Original soft chimes
-  are optional and off by default.
+  start enabled and can be turned off in **Your name & goal**.
 - **Reminders** — optional daily Android notifications, scheduled on-device
   with notification permission and restored after reboot. Web and portable
   Windows builds offer a repeating calendar file with an alert; users must
