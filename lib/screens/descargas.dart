@@ -33,26 +33,34 @@ class DescargasScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final compact = MediaQuery.sizeOf(context).width < corteMedio;
+    final versionBadge = Pill(
+      'Version $_version',
+      color: theme.colorScheme.onSurfaceVariant,
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Install it'),
         actions: [
-          if (_version.isNotEmpty)
+          if (_version.isNotEmpty && !compact)
             Padding(
               padding: const EdgeInsets.only(right: 16),
-              child: Center(
-                child: Pill(
-                  _version,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+              child: Center(child: versionBadge),
             ),
         ],
       ),
       body: Pagina(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
+          if (_version.isNotEmpty && compact)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: versionBadge,
+              ),
+            ),
           Centrado(
             ancho: anchoLectura,
             child: ContentCard(
