@@ -50,7 +50,7 @@ const String caraTexto = 'Inter';
 ///
 /// A test checks it against pubspec.yaml, which is the number that actually
 /// goes into the APK: two places to change, but never two different answers.
-const String cilVersion = '1.1.0';
+const String cilVersion = '1.2.0';
 
 /// Variable-font weights. These have to be requested explicitly: setting
 /// `fontWeight` alone leaves a variable font on its default instance.

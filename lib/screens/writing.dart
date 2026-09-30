@@ -15,6 +15,7 @@ import '../widgets.dart';
 import '../writing_data.dart';
 import '../writing_models.dart';
 import '../writing_review.dart';
+import '../encouragement.dart';
 import 'writing_feedback.dart';
 
 /// Pick a task first. An empty editor teaches nothing — the exam is a response
@@ -167,6 +168,7 @@ class _WritingEditorState extends State<WritingEditor> {
   String? _reviewError;
   WritingFeedback? _feedback;
   String? _reviewedText;
+  final _feedbackSounds = FeedbackSounds();
 
   (int, int) get _limits => widget.task.wordRange;
 
@@ -201,6 +203,7 @@ class _WritingEditorState extends State<WritingEditor> {
     // Al volver atrás no perder los últimos dos segundos del borrador.
     if (_loaded) unawaited(_state.saveDraft(widget.task.id, _text.text));
     _reviewClient.close();
+    _feedbackSounds.dispose();
     _text.dispose();
     _scrollConsigna.dispose();
     super.dispose();
@@ -226,6 +229,9 @@ class _WritingEditorState extends State<WritingEditor> {
         _feedback = feedback;
         _reviewedText = submitted;
       });
+      unawaited(
+        _feedbackSounds.play(enabled: _state.profile.sounds, milestone: true),
+      );
       _showFeedback(feedback, submitted);
     } on WritingReviewException catch (error) {
       if (mounted) setState(() => _reviewError = error.message);

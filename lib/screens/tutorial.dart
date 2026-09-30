@@ -40,6 +40,7 @@ const List<PasoTutorial> pasosTutorial = [
       'Aiming higher adds work rather than replacing it — a C1 candidate '
           'still drills the B1 basics.',
       'Change it whenever you like. Nothing is lost.',
+      'Tap MY GOAL to save your name, your reason for learning, a target date and a daily practice target. You can also set up reminders and optional sounds.',
     ],
   ),
   PasoTutorial(

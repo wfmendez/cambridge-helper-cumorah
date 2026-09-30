@@ -5,6 +5,8 @@ import '../cambridge_theme.dart';
 import '../disposicion.dart';
 import '../widgets.dart';
 import '../writing_review.dart';
+import '../encouragement.dart';
+import '../state.dart';
 
 class WritingFeedbackScreen extends StatelessWidget {
   const WritingFeedbackScreen({
@@ -24,6 +26,16 @@ class WritingFeedbackScreen extends StatelessWidget {
         ancho: anchoLectura,
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
         children: [
+          EncouragementCard(
+            title: sessionEncouragement(
+              feedback.total,
+              20,
+              AppScope.of(context).profile.name,
+            ),
+            message: 'Putting your ideas into English is worth celebrating. Choose one suggestion to work on in your next draft.',
+            celebrate: feedback.total >= 14,
+          ),
+          const SizedBox(height: 20),
           Text(
             'Practice estimate · ${feedback.total}/20',
             style: const TextStyle(fontSize: 23, fontWeight: FontWeight.w700),

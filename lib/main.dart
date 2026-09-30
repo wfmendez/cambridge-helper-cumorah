@@ -7,17 +7,21 @@
 /// the chosen answer and task to the server only when requested.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'state.dart';
 import 'screens/english.dart';
 import 'screens/tutorial.dart';
 import 'theme.dart';
+import 'reminders.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final state = await AppState.open();
   runApp(CilApp(state: state));
+  unawaited(restoreLocalReminder(state.profile, state.goal.cefr));
 }
 
 class CilApp extends StatelessWidget {

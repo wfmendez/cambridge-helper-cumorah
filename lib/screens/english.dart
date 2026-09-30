@@ -14,6 +14,8 @@ import '../practice.dart';
 import '../theme.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
+import '../encouragement.dart';
+import 'profile.dart';
 import 'descargas.dart';
 import 'player.dart';
 import 'speaking.dart';
@@ -42,8 +44,26 @@ class EnglishScreen extends StatefulWidget {
   State<EnglishScreen> createState() => _EnglishScreenState();
 }
 
-class _EnglishScreenState extends State<EnglishScreen> {
+class _EnglishScreenState extends State<EnglishScreen>
+    with WidgetsBindingObserver {
   int _destino = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) setState(() {});
+  }
 
   // Una sola lista alimenta ambas formas de navegación.
   static const _destinos = [
@@ -211,12 +231,19 @@ class _GoalPicker extends StatelessWidget {
       runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(
-          'MY GOAL',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.1,
+        InkWell(
+          onTap: () => openProfile(context),
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(
+              'MY GOAL',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+              ),
+            ),
           ),
         ),
         for (final level in ExamLevel.values)
@@ -287,6 +314,8 @@ class _Practica extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        const GoalCard(),
+        const SizedBox(height: 16),
         Rejilla(
           espacioFinal: false,
           children: [
@@ -619,6 +648,10 @@ class _SesionPracticaState extends State<_SesionPractica> {
   bool _comprobado = false;
   bool _verPista = false;
   int _aciertos = 0;
+  int _streak = 0;
+  bool _dailyWin = false;
+  final _missed = <Exercise>[];
+  final _feedbackSounds = FeedbackSounds();
 
   @override
   void initState() {
@@ -629,6 +662,7 @@ class _SesionPracticaState extends State<_SesionPractica> {
   @override
   void dispose() {
     _campo.dispose();
+    _feedbackSounds.dispose();
     super.dispose();
   }
 
@@ -636,22 +670,46 @@ class _SesionPracticaState extends State<_SesionPractica> {
   bool get _acertado => _comprobado && _actual.accepts(_respuesta ?? '');
 
   Future<void> _comprobar() async {
+    if (_comprobado) return;
     final dada = _actual.type == ExerciseType.choice
         ? (_respuesta ?? '')
         : _campo.text;
+    if (dada.trim().isEmpty) return;
     final bien = _actual.accepts(dada);
+    final state = AppScope.of(context);
+    _dailyWin =
+        state.profile.configured &&
+        state.todayQuestions < state.profile.dailyQuestions &&
+        state.todayQuestions + 1 >= state.profile.dailyQuestions;
 
     setState(() {
       _respuesta = dada;
       _comprobado = true;
       if (bien) _aciertos++;
+      _streak = bien ? _streak + 1 : 0;
+      if (!bien) _missed.add(_actual);
     });
-    await AppScope.of(context).recordPractice(_actual.topic, _actual.id, bien);
+    unawaited(
+      _feedbackSounds.play(
+        enabled: state.profile.sounds,
+        correct: bien,
+        milestone: _dailyWin || _streak == 3,
+      ),
+    );
+    await state.recordPractice(_actual.topic, _actual.id, bien);
   }
 
   void _siguiente() {
     if (_indice + 1 >= _lista.length) {
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => _PracticeComplete(
+            correct: _aciertos,
+            total: _lista.length,
+            missed: _missed,
+          ),
+        ),
+      );
       return;
     }
     setState(() {
@@ -722,6 +780,7 @@ class _SesionPracticaState extends State<_SesionPractica> {
                 labelText: 'Your answer',
                 border: OutlineInputBorder(),
               ),
+              onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _comprobar(),
             ),
           if (!_comprobado && e.hint != null) ...[
@@ -743,17 +802,38 @@ class _SesionPracticaState extends State<_SesionPractica> {
           ],
           if (_comprobado) ...[
             const SizedBox(height: 16),
+            EncouragementCard(
+              key: ValueKey('encouragement-$_indice'),
+              title: _dailyWin
+                  ? addressed(
+                      'Daily goal complete',
+                      AppScope.of(context).profile.name,
+                    )
+                  : answerEncouragement(
+                      correct: _acertado,
+                      index: _indice,
+                      streak: _streak,
+                      name: AppScope.of(context).profile.name,
+                    ),
+              message: _dailyWin
+                  ? 'You made time for your goal today. Every attempt helped you get here.'
+                  : _acertado
+                  ? 'Read the explanation to make this one stick.'
+                  : 'One answer does not define your ability. Read the explanation, then take the next step.',
+              celebrate: _dailyWin || _acertado,
+            ),
+            const SizedBox(height: 12),
             Reveal(
               child: ContentCard(
                 color:
                     (_acertado
                             ? okGreen(theme.colorScheme)
-                            : theme.colorScheme.error)
+                            : warnAmber(theme.colorScheme))
                         .withValues(alpha: 0.08),
                 border:
                     (_acertado
                             ? okGreen(theme.colorScheme)
-                            : theme.colorScheme.error)
+                            : warnAmber(theme.colorScheme))
                         .withValues(alpha: 0.4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -763,10 +843,10 @@ class _SesionPracticaState extends State<_SesionPractica> {
                         Icon(
                           _acertado
                               ? Icons.check_circle_rounded
-                              : Icons.cancel_rounded,
+                              : Icons.lightbulb_outline_rounded,
                           color: _acertado
                               ? okGreen(theme.colorScheme)
-                              : theme.colorScheme.error,
+                              : warnAmber(theme.colorScheme),
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -775,7 +855,7 @@ class _SesionPracticaState extends State<_SesionPractica> {
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: _acertado
                                 ? okGreen(theme.colorScheme)
-                                : theme.colorScheme.error,
+                                : warnAmber(theme.colorScheme),
                           ),
                         ),
                       ],
@@ -809,6 +889,59 @@ class _SesionPracticaState extends State<_SesionPractica> {
                   ? (_indice + 1 >= _lista.length ? 'Finish' : 'Next')
                   : 'Check',
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PracticeComplete extends StatelessWidget {
+  const _PracticeComplete({
+    required this.correct,
+    required this.total,
+    required this.missed,
+  });
+
+  final int correct;
+  final int total;
+  final List<Exercise> missed;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppScope.of(context);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Practice complete')),
+      body: Pagina(
+        ancho: anchoLectura,
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+        children: [
+          EncouragementCard(
+            title: sessionEncouragement(correct, total, state.profile.name),
+            message:
+                '$correct of $total correct. '
+                '${missed.isEmpty ? 'Take a moment to enjoy what you have learned.' : 'The questions you missed are a useful guide for your next practice.'}',
+            celebrate: true,
+          ),
+          const SizedBox(height: 20),
+          const GoalCard(),
+          const SizedBox(height: 20),
+          if (missed.isNotEmpty) ...[
+            FilledButton.icon(
+              onPressed: () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      _SesionPractica(exercises: missed, title: 'Another try'),
+                ),
+              ),
+              icon: const Icon(Icons.replay_rounded),
+              label: Text('Try these ${missed.length} again'),
+            ),
+            const SizedBox(height: 10),
+          ],
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Back to practice'),
           ),
         ],
       ),
@@ -1360,6 +1493,7 @@ class _HojaRespuestas extends StatefulWidget {
 }
 
 class _HojaRespuestasState extends State<_HojaRespuestas> {
+  final _feedbackSounds = FeedbackSounds();
   final _campos = <int, TextEditingController>{};
   List<PartResult>? _resultado;
 
@@ -1388,6 +1522,7 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
   @override
   void dispose() {
     _tic?.cancel();
+    _feedbackSounds.dispose();
     for (final c in _campos.values) {
       c.dispose();
     }
@@ -1406,11 +1541,18 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
       _campos.map((k, v) => MapEntry(k, v.text));
 
   Future<void> _corregir() async {
+    if (_resultado != null) return;
     final res = markPaper(widget.paper, _respuestas);
     final marks = res.fold<int>(0, (n, r) => n + r.marks);
 
     _tic?.cancel();
     setState(() => _resultado = res);
+    unawaited(
+      _feedbackSounds.play(
+        enabled: AppScope.of(context).profile.sounds,
+        milestone: true,
+      ),
+    );
 
     await AppScope.of(context).saveAttempt(
       Attempt(
@@ -1460,6 +1602,16 @@ class _HojaRespuestasState extends State<_HojaRespuestas> {
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
           children: [
             if (res != null) ...[
+              EncouragementCard(
+                title: sessionEncouragement(
+                  res.fold<int>(0, (sum, part) => sum + part.marks),
+                  widget.paper.maxMarks,
+                  AppScope.of(context).profile.name,
+                ),
+                message: 'Finishing a practice paper takes commitment. Pick one area to work on next — you can build from here.',
+                celebrate: true,
+              ),
+              const SizedBox(height: 12),
               _Marcador(result: res, paper: widget.paper),
               const SizedBox(height: 8),
             ],

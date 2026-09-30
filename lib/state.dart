@@ -1,8 +1,6 @@
-/// The only thing this app stores: how you are doing.
+/// Progress, a personal goal and preferences, stored on this device.
 ///
-/// A trimmed-down version of Píle's state. No schedule, no to-do list, no
-/// cloud: practice scores and mock attempts live on the phone and never leave
-/// it. No accounts, no sign-up.
+/// Practice scores, drafts, names and goals do not require an account.
 library;
 
 import 'dart:convert';
@@ -11,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cambridge.dart';
+import 'learner_profile.dart';
+import 'reminders.dart';
 
 const _kIntentos = 'intentos_examen';
 const _kPractica = 'practica_marcador';
@@ -19,6 +19,8 @@ const _kBorrador = 'borrador_writing';
 const _kMeta = 'target_level';
 const _kTema = 'theme_mode';
 const _kTutorial = 'tutorial_seen';
+const _kProfile = 'learner_profile';
+const _kDailyPractice = 'daily_practice';
 
 class AppState extends ChangeNotifier {
   AppState._(this._prefs) {
@@ -38,6 +40,8 @@ class AppState extends ChangeNotifier {
   /// code and change with an update, and a saved copy of one would go stale.
   /// An id that no longer exists simply drops out of the deck.
   Set<String> _fallos = {};
+  LearnerProfile _profile = const LearnerProfile();
+  Map<String, int> _dailyPractice = {};
 
   static Future<AppState> open() async {
     final prefs = await SharedPreferences.getInstance();
@@ -49,7 +53,51 @@ class AppState extends ChangeNotifier {
     _intentos.sort((a, b) => b.date.compareTo(a.date));
     _practica = _leerMarcador();
     _fallos = (_prefs.getStringList(_kFallos) ?? const []).toSet();
+    try {
+      _profile = LearnerProfile.fromJson(
+        jsonDecode(_prefs.getString(_kProfile) ?? '{}'),
+      );
+    } catch (_) {
+      _profile = const LearnerProfile();
+    }
+    _dailyPractice = _readDaily(_prefs.getString(_kDailyPractice));
   }
+
+  static Map<String, int> _readDaily(String? raw) {
+    try {
+      final data = jsonDecode(raw ?? '{}');
+      if (data is! Map) return {};
+      return {
+        for (final entry in data.entries)
+          if (entry.key is String &&
+              RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(entry.key) &&
+              DateTime.tryParse(entry.key) != null &&
+              entry.value is int &&
+              entry.value >= 0)
+            entry.key as String: entry.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  LearnerProfile get profile => _profile;
+
+  Future<void> saveProfile(LearnerProfile profile) async {
+    _profile = LearnerProfile.fromJson(profile.toJson());
+    await _prefs.setString(_kProfile, jsonEncode(_profile.toJson()));
+    notifyListeners();
+  }
+
+  int practiceOn(DateTime day) => _dailyPractice[dayKey(day)] ?? 0;
+  int get todayQuestions => practiceOn(DateTime.now());
+  bool get dailyGoalReached => todayQuestions >= profile.dailyQuestions;
+
+  /// A missed day never erases the work already done.
+  int activeDaysThisWeek(DateTime now) => List.generate(
+    7,
+    (i) => DateTime(now.year, now.month, now.day - i),
+  ).where((day) => practiceOn(day) > 0).length;
 
   /// Reads tolerantly: an unreadable record is dropped rather than stopping
   /// the app from opening.
@@ -138,6 +186,7 @@ class AppState extends ChangeNotifier {
   Future<void> setGoal(ExamLevel level) async {
     await _prefs.setString(_kMeta, level.name);
     notifyListeners();
+    await restoreLocalReminder(profile, level.cefr);
   }
 
   // ── Mock tests ─────────────────────────────────────────────────────────────
@@ -212,6 +261,12 @@ class AppState extends ChangeNotifier {
     String exerciseId,
     bool acierto,
   ) async {
+    final now = DateTime.now();
+    final today = dayKey(now);
+    _dailyPractice[today] = (_dailyPractice[today] ?? 0) + 1;
+    _dailyPractice.removeWhere(
+      (day, _) => daysUntil(DateTime.parse(day), now) < -90,
+    );
     final actual = _practica[theme] ?? [0, 0];
     _practica[theme] = [
       actual[0] + (acierto ? 1 : 0),
@@ -228,6 +283,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     await _prefs.setString(_kPractica, jsonEncode(_practica));
     await _prefs.setStringList(_kFallos, _fallos.toList());
+    await _prefs.setString(_kDailyPractice, jsonEncode(_dailyPractice));
   }
 
   // ── Writing ────────────────────────────────────────────────────────────────
@@ -244,13 +300,18 @@ class AppState extends ChangeNotifier {
   /// Wipes everything stored. Useful if you lend the phone, or want a clean
   /// slate before a mock you intend to take seriously.
   Future<void> clearAll() async {
+    await cancelLocalReminder();
     _intentos = [];
     _practica = {};
     _fallos = {};
+    _profile = const LearnerProfile();
+    _dailyPractice = {};
     notifyListeners();
     await _prefs.remove(_kIntentos);
     await _prefs.remove(_kPractica);
     await _prefs.remove(_kFallos);
+    await _prefs.remove(_kProfile);
+    await _prefs.remove(_kDailyPractice);
     for (final clave in _prefs.getKeys().toList()) {
       if (clave.startsWith(_kBorrador)) await _prefs.remove(clave);
     }
@@ -278,6 +339,8 @@ class AppState extends ChangeNotifier {
       'cil': 1,
       'saved': DateTime.now().toIso8601String(),
       'goal': goal.name,
+      'profile': profile.toJson(),
+      'dailyPractice': _dailyPractice,
       'attempts': _intentos.map((i) => i.toJson()).toList(),
       'practice': _practica,
       'mistakes': _fallos.toList(),
@@ -335,7 +398,12 @@ class AppState extends ChangeNotifier {
     }
 
     final meta = ExamLevel.values.where((l) => l.name == datos['goal']);
+    // Notification permission belongs to this device, not to a backup.
+    await cancelLocalReminder();
     if (meta.isNotEmpty) await setGoal(meta.first);
+    await saveProfile(LearnerProfile.fromJson(datos['profile']));
+    _dailyPractice = _readDaily(jsonEncode(datos['dailyPractice'] ?? {}));
+    await _prefs.setString(_kDailyPractice, jsonEncode(_dailyPractice));
 
     notifyListeners();
     return true;

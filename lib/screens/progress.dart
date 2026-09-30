@@ -21,6 +21,7 @@ import '../practice.dart';
 import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'profile.dart';
 
 class ProgressTab extends StatelessWidget {
   const ProgressTab({super.key});
@@ -45,6 +46,8 @@ class ProgressTab extends StatelessWidget {
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       children: [
+        const GoalCard(),
+        const SizedBox(height: 20),
         Centrado(
           ancho: anchoLectura,
           child: _Resumen(intentos: intentos, temas: temas),
@@ -96,12 +99,8 @@ class _Vacio extends StatelessWidget {
       ancho: anchoLectura,
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 32),
       children: [
-        Ilustracion(
-          escena: Escena.meta,
-          color: theme.colorScheme.primary,
-          size: 150,
-        ),
-        const SizedBox(height: 28),
+        const GoalCard(),
+        const SizedBox(height: 24),
         Text(
           'Nothing to show yet',
           textAlign: TextAlign.center,
@@ -118,6 +117,9 @@ class _Vacio extends StatelessWidget {
             height: 1.55,
           ),
         ),
+        const SizedBox(height: 24),
+        const TituloMarcado('Your data'),
+        const _Borrar(),
       ],
     );
   }
@@ -474,9 +476,8 @@ class _Borrar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Everything on this page is on this phone only — nothing was ever '
-            'sent anywhere. That also means uninstalling the app deletes it, '
-            'so if it matters to you, back it up.',
+            'Your progress and personal goal are saved on this device. '
+            'Back them up before you change devices or uninstall the app.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
@@ -592,9 +593,11 @@ class _Borrar extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete everything?'),
+        scrollable: true,
         content: const Text(
-          'Every mock test result, every practice score and every writing '
-          'draft. Your goal and the theme stay. This cannot be undone.',
+          'This deletes your profile, scores, mock attempts and drafts, and '
+          'cancels Android reminders. Your exam level and theme stay. '
+          'Remove calendar reminders in your calendar. This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -608,7 +611,21 @@ class _Borrar extends StatelessWidget {
         ],
       ),
     );
-    if (si ?? false) await state.clearAll();
+    if (si ?? false) {
+      try {
+        await state.clearAll();
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Could not reset your data and reminders. Please try again.',
+              ),
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

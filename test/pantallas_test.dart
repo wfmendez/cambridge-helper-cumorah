@@ -56,8 +56,9 @@ void main() {
       expect(cardWidth, lessThanOrEqualTo(1200));
       if (width >= 800) {
         final cards = find.byType(ContentCard);
-        final first = tester.getRect(cards.at(0));
-        final second = tester.getRect(cards.at(1));
+        // The personal goal spans the row above the two quick-start cards.
+        final first = tester.getRect(cards.at(1));
+        final second = tester.getRect(cards.at(2));
         expect(first.top, second.top);
         expect(first.height, second.height);
         expect(first.right, lessThan(second.left));
