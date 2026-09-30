@@ -8,7 +8,6 @@ import 'package:cil/screens/vocab.dart';
 import 'package:cil/screens/writing.dart';
 import 'package:cil/state.dart';
 import 'package:cil/writing_data.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,11 +41,9 @@ Future<void> start(WidgetTester tester) async {
 
 void main() {
   setUp(() {
-    debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     SharedPreferences.setMockInitialValues({'tutorial_seen': true});
     simularAudio();
   });
-  tearDown(() => debugDefaultTargetPlatformOverride = null);
 
   testWidgets('arrows and page keys scroll the profile from its header', (
     tester,
@@ -69,7 +66,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ProfileScreen), findsNothing);
     expect(tester.takeException(), isNull);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('keyboard scrolling only moves the selected main destination', (
     tester,
@@ -107,7 +104,7 @@ void main() {
     expect(listPosition(tester), same(positions.first));
     expect(positions.first.pixels, greaterThan(0));
     expect(tester.takeException(), isNull);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('reference pages and tutorial scroll immediately after opening', (
     tester,
@@ -135,7 +132,7 @@ void main() {
       navigator.pop();
       await tester.pumpAndSettle();
     }
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets('arrow keys edit profile text without scrolling the page', (
     tester,
@@ -143,7 +140,11 @@ void main() {
     await start(tester);
     await tester.tap(find.text('Set up my goal').first);
     await tester.pumpAndSettle();
-    final field = find.byType(TextField).at(1);
+    final field = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField &&
+          widget.decoration?.labelText == 'Why does this matter to you?',
+    );
     await tester.ensureVisible(field);
     await tester.enterText(field, 'My first line\nMy second line');
     await tester.pumpAndSettle();
@@ -157,7 +158,7 @@ void main() {
     expect(controller.selection.baseOffset, cursor);
     expect(listPosition(tester).pixels, offset);
     expect(tester.takeException(), isNull);
-  });
+  }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
   testWidgets(
     'Writing scrolls its prompt, and arrows inside the draft keep editing',
@@ -198,5 +199,6 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
   );
 }
