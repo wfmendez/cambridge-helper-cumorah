@@ -36,7 +36,9 @@ it, and the name should not suggest otherwise.
   Open them from Mock test. They need internet; audio is not redistributed.
   Native apps open the device browser and offer a copyable link as a fallback.
 - **Speaking** — a timer per part, a prompt that shuffles, and the phrases
-  examiners are listening for, including ways to open an answer.
+  examiners are listening for, including ways to open an answer. Part 2 comes
+  with photographs, because it cannot be practised without them: one to
+  describe at B1, two to compare from B2 up.
 - **The exam** — how each paper works, what it weighs, how it is scored, and
   what changes between B2 and C1.
 - **Your name & goal** — an optional nickname, personal reason, target date,
@@ -66,6 +68,10 @@ it, and the name should not suggest otherwise.
 - **Not Cambridge's booklets.** The app holds the exam structure and the answer
   keys so it can mark you, not the texts of the papers. The sample papers are
   free to download from Cambridge, and real practice happens on paper anyway.
+  The Speaking photographs are not Cambridge's either: they are free ones from
+  [Unsplash](https://unsplash.com/license), each credited to its photographer
+  in the app. The list, with where each came from, is in
+  `scripts/speaking_photos.tsv`.
 
 ## Building it
 

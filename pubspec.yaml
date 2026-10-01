@@ -73,6 +73,9 @@ flutter:
   uses-material-design: true
 
   assets:
+    # Photographs for Speaking Part 2: free ones from Unsplash, credited in
+    # lib/speaking_data.dart. Fetched on demand on the web, not at start-up.
+    - assets/speaking/
     - assets/sounds/
     - assets/fonts/OFL-Fraunces.txt
     - assets/fonts/OFL-Inter.txt

@@ -137,7 +137,7 @@ class _EnglishScreenState extends State<EnglishScreen>
                             for (final (index, page) in <Widget>[
                               const _Practica(),
                               WritingBody(level: state.goal),
-                              const SpeakingBody(),
+                              SpeakingBody(level: state.goal),
                               const _Simulacros(),
                               const ProgressTab(),
                             ].indexed)
@@ -1500,7 +1500,9 @@ class _FilaPrueba extends StatelessWidget {
             final id when id.contains('writing') => WritingScreen(
               level: paper.level,
             ),
-            final id when id.contains('speaking') => const SpeakingScreen(),
+            final id when id.contains('speaking') => SpeakingScreen(
+              level: paper.level,
+            ),
             _ => _HojaRespuestas(paper: paper),
           },
         ),

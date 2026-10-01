@@ -4,7 +4,40 @@
 /// two things it usefully can: it keeps the clock honest, and it hands you the
 /// phrases that examiners are listening for. The questions are written here,
 /// not copied from a paper.
+///
+/// Part 2 is the part that cannot be practised from text alone: it is about a
+/// photograph. The photographs are not Cambridge's. They are free ones from
+/// Unsplash, chosen to be like the exam's — everyday scenes with people doing
+/// something — and each keeps the name of who took it.
 library;
+
+import 'cambridge.dart';
+
+/// A photograph for Part 2, and who took it.
+class SpeakingPhoto {
+  const SpeakingPhoto(this.file, this.by, this.id);
+
+  /// File name in assets/speaking, without the extension.
+  final String file;
+
+  /// The photographer. The Unsplash licence does not require the credit; it is
+  /// here because someone made the picture.
+  final String by;
+
+  /// The photo's id on Unsplash, so the original can be found again.
+  final String id;
+
+  String get asset => 'assets/speaking/$file.webp';
+  String get page => 'https://unsplash.com/photos/$id';
+}
+
+/// One Part 2 task: what the examiner says, and the photograph or photographs
+/// it is about. One photograph at B1, to describe; two at B2, to compare.
+class PhotoTask {
+  const PhotoTask(this.question, this.photos);
+  final String question;
+  final List<SpeakingPhoto> photos;
+}
 
 class SpeakingPart {
   const SpeakingPart({
@@ -12,7 +45,8 @@ class SpeakingPart {
     required this.name,
     required this.seconds,
     required this.whatToDo,
-    required this.prompts,
+    this.prompts = const [],
+    this.photoTasks = const [],
     required this.openers,
     this.tip,
   });
@@ -28,11 +62,93 @@ class SpeakingPart {
   /// Things to talk about. Shuffled, so you rarely get the same one twice.
   final List<String> prompts;
 
+  /// The same, for a part that works from photographs. When this is not
+  /// empty it is used instead of [prompts].
+  final List<PhotoTask> photoTasks;
+
   /// Ways to start. The hardest second of the test is the first one.
   final List<String> openers;
 
   final String? tip;
+
+  /// How many different things this part can ask.
+  int get variants =>
+      photoTasks.isNotEmpty ? photoTasks.length : prompts.length;
+
+  String promptAt(int i) =>
+      photoTasks.isNotEmpty ? photoTasks[i].question : prompts[i];
+
+  List<SpeakingPhoto> photosAt(int i) =>
+      photoTasks.isNotEmpty ? photoTasks[i].photos : const [];
 }
+
+/// The parts for a level. Only Part 2 changes: B1 describes one photograph,
+/// B2 and above compare two. The other three parts ask the same kind of thing
+/// at every level.
+List<SpeakingPart> speakingPartsFor(ExamLevel level) => [
+  for (final p in speakingParts)
+    if (p.number == 2 && level == ExamLevel.b1) _b1PhotoPart else p,
+];
+
+const _b1PhotoPart = SpeakingPart(
+  number: 2,
+  name: 'Describe a photograph',
+  seconds: 60,
+  whatToDo:
+      'About one minute on your own, describing a photograph. The examiner '
+      'tells you what it shows; you say what you can see. Nobody interrupts '
+      'you.',
+  photoTasks: [
+    PhotoTask(
+      'Your photograph shows people cooking at home. Tell us what you can '
+      'see in the photograph.',
+      [SpeakingPhoto('b1-cooking', 'Annie Spratt', 'UyEmagArOLY')],
+    ),
+    PhotoTask(
+      'Your photograph shows people playing a sport outdoors. Tell us what '
+      'you can see in the photograph.',
+      [SpeakingPhoto('b1-football', 'Simone Franchina', 'y_sf8j3K2ZY')],
+    ),
+    PhotoTask(
+      'Your photograph shows people at a market. Tell us what you can see '
+      'in the photograph.',
+      [SpeakingPhoto('b1-market', 'Stephan HK', 'R-xqhYU4ZKs')],
+    ),
+    PhotoTask(
+      'Your photograph shows a family by the sea. Tell us what you can see '
+      'in the photograph.',
+      [SpeakingPhoto('b1-beach', 'Natalya Zaritskaya', 'SIOdjcYotms')],
+    ),
+    PhotoTask(
+      'Your photograph shows people waiting for a train. Tell us what you '
+      'can see in the photograph.',
+      [
+        SpeakingPhoto(
+          'b1-station',
+          'Dominic Kurniawan Suryaputra',
+          'mTiPBTvoqVQ',
+        ),
+      ],
+    ),
+    PhotoTask(
+      'Your photograph shows people on a camping trip. Tell us what you can '
+      'see in the photograph.',
+      [SpeakingPhoto('b1-camping', 'Colin + Meg', 'XDt4MuJ58LI')],
+    ),
+  ],
+  openers: [
+    'In this photograph I can see…',
+    'In the background there is… / there are…',
+    'On the left… / In the middle… / On the right…',
+    'She looks… / They seem to be…',
+    'I think it is… because…',
+  ],
+  tip:
+      'Start with the whole scene, then the details: who is there, where they '
+      'are, what they are doing, what they are wearing, what the weather is '
+      'like. If you do not know a word, describe the thing — “it is something '
+      'you use to…” — and keep talking. Silence is the only wrong answer.',
+);
 
 const List<SpeakingPart> speakingParts = [
   SpeakingPart(
@@ -71,16 +187,56 @@ const List<SpeakingPart> speakingParts = [
     whatToDo:
         'One full minute on your own, comparing two photographs and '
         'answering the question printed above them. Nobody interrupts you.',
-    prompts: [
-      'Two people studying in different places. Why might they have chosen '
-          'to study there?',
-      'Two people doing different jobs outdoors. What might be difficult '
-          'about each job?',
-      'Two groups of people celebrating. How might the people be feeling?',
-      'Two ways of travelling to work. Why might people prefer each one?',
-      'Two people learning something new. What might they find rewarding?',
-      'Two meals in very different settings. Why might the people have '
-          'chosen to eat there?',
+    photoTasks: [
+      PhotoTask(
+        'Two people studying in different places. Why might they have chosen '
+        'to study there?',
+        [
+          SpeakingPhoto('b2-study-library', 'Praveen Gupta', 'YhfxJpa_Ch0'),
+          SpeakingPhoto('b2-study-cafe', 'Ninthgrid', '0YBdk_6mSvY'),
+        ],
+      ),
+      PhotoTask(
+        'Two people doing different jobs outdoors. What might be difficult '
+        'about each job?',
+        [
+          SpeakingPhoto('b2-job-garden', 'Jed Owen', '1JgUGDdcWnM'),
+          SpeakingPhoto('b2-job-construction', 'Valerie V', 'PDjpA1yeonw'),
+        ],
+      ),
+      PhotoTask(
+        'Two groups of people celebrating. How might the people be feeling?',
+        [
+          SpeakingPhoto(
+            'b2-celebrate-birthday',
+            'Vitaly Gariev',
+            'E1qHLWspl-k',
+          ),
+          SpeakingPhoto('b2-celebrate-graduation', 'RUT MIIT', 'hpRGrfOIybc'),
+        ],
+      ),
+      PhotoTask(
+        'Two ways of travelling to work. Why might people prefer each one?',
+        [
+          SpeakingPhoto('b2-commute-bike', 'Vitaly Gariev', 'wYwm3Z0HvXg'),
+          SpeakingPhoto('b2-commute-metro', 'Zoshua Colah', 'X-nIOMKmGZY'),
+        ],
+      ),
+      PhotoTask(
+        'Two people learning something new. What might they find rewarding?',
+        [
+          SpeakingPhoto('b2-learn-pottery', 'Maggie Markel', 'oRbtEWw_l04'),
+          SpeakingPhoto('b2-learn-guitar', 'Vitaly Gariev', 'S-vWVfbGr28'),
+        ],
+      ),
+      PhotoTask(
+        'Two meals in very different settings. Why might the people have '
+        'chosen to eat there?',
+        [
+          SpeakingPhoto('b2-meal-picnic', 'Toa Heftiba', 'q1QDZtYP2ow'),
+          SpeakingPhoto('b2-meal-restaurant', 'tommao wang', 'MAFMkfevd7w'),
+        ],
+      ),
     ],
     openers: [
       'The first picture shows… whereas in the second one…',

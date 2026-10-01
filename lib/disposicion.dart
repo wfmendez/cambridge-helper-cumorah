@@ -69,6 +69,25 @@ class Centrado extends StatelessWidget {
   );
 }
 
+/// Lo que mide una celda de la [Rejilla] que la contiene.
+///
+/// Las filas tienen la misma altura gracias a IntrinsicHeight, y debajo de
+/// eso no puede vivir un LayoutBuilder: Flutter lo rechaza al medir. Una
+/// tarjeta que necesita saber su propio ancho — para poner dos fotos lado a
+/// lado o una sobre otra — lo pregunta aquí.
+class AnchoCelda extends InheritedWidget {
+  const AnchoCelda({super.key, required this.ancho, required super.child});
+
+  final double ancho;
+
+  /// Nulo fuera de una rejilla.
+  static double? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<AnchoCelda>()?.ancho;
+
+  @override
+  bool updateShouldNotify(AnchoCelda anterior) => anterior.ancho != ancho;
+}
+
 /// Filas de igual altura sin imponer una altura fija al texto. Las claves
 /// conservan temporizadores, campos y tarjetas abiertas al cambiar de columnas.
 class Rejilla extends StatefulWidget {
@@ -129,42 +148,51 @@ class _RejillaState extends State<Rejilla> {
             child: widget.children[i],
           ),
       ];
+      final celda =
+          (constraints.maxWidth - widget.separacion * (columnas - 1)) /
+          columnas;
       if (columnas == 1) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < hijos.length; i++)
-              Padding(
-                padding: i == hijos.length - 1 && !widget.espacioFinal
-                    ? widget.rellenoCompacto.copyWith(bottom: 0)
-                    : widget.rellenoCompacto,
-                child: hijos[i],
-              ),
-          ],
+        return AnchoCelda(
+          ancho: celda,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < hijos.length; i++)
+                Padding(
+                  padding: i == hijos.length - 1 && !widget.espacioFinal
+                      ? widget.rellenoCompacto.copyWith(bottom: 0)
+                      : widget.rellenoCompacto,
+                  child: hijos[i],
+                ),
+            ],
+          ),
         );
       }
-      return Column(
-        children: [
-          for (var i = 0; i < hijos.length; i += columnas)
-            Padding(
-              padding: EdgeInsets.only(bottom: widget.separacion),
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var j = 0; j < columnas; j++) ...[
-                      if (j > 0) SizedBox(width: widget.separacion),
-                      Expanded(
-                        child: i + j < hijos.length
-                            ? hijos[i + j]
-                            : const SizedBox.shrink(),
-                      ),
+      return AnchoCelda(
+        ancho: celda,
+        child: Column(
+          children: [
+            for (var i = 0; i < hijos.length; i += columnas)
+              Padding(
+                padding: EdgeInsets.only(bottom: widget.separacion),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var j = 0; j < columnas; j++) ...[
+                        if (j > 0) SizedBox(width: widget.separacion),
+                        Expanded(
+                          child: i + j < hijos.length
+                              ? hijos[i + j]
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       );
     },
   );

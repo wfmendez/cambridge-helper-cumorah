@@ -3,11 +3,13 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../cambridge.dart';
 import '../disposicion.dart';
 
 import '../speaking_data.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
+import 'enlace.dart';
 import 'recorder.dart';
 
 /// Speaking practice: a clock, a prompt, and the phrases to answer with.
@@ -19,17 +21,23 @@ import 'recorder.dart';
 /// same list without the bar is [SpeakingBody], which is what the Speaking tab
 /// shows.
 class SpeakingScreen extends StatelessWidget {
-  const SpeakingScreen({super.key});
+  const SpeakingScreen({super.key, required this.level});
+
+  final ExamLevel level;
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Speaking practice')),
-    body: const SpeakingBody(),
+    body: SpeakingBody(level: level),
   );
 }
 
 class SpeakingBody extends StatelessWidget {
-  const SpeakingBody({super.key});
+  const SpeakingBody({super.key, required this.level});
+
+  /// Part 2 is a different task at B1 — one photograph to describe, not two
+  /// to compare — so the level decides which parts are shown.
+  final ExamLevel level;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +61,15 @@ class SpeakingBody extends StatelessWidget {
           maxColumnas: 2,
           anchoMinimo: 360,
           rellenoCompacto: const EdgeInsets.only(top: 12),
-          children: [for (final p in speakingParts) _TarjetaParte(part: p)],
+          children: [
+            for (final p in speakingPartsFor(level))
+              // La clave lleva el nivel: al cambiar de meta, la tarjeta de la
+              // Part 2 es otra tarea y no debe heredar el reloj ni la foto.
+              _TarjetaParte(
+                key: ValueKey('${level.name}-${p.number}'),
+                part: p,
+              ),
+          ],
         ),
       ],
     );
@@ -61,7 +77,7 @@ class SpeakingBody extends StatelessWidget {
 }
 
 class _TarjetaParte extends StatefulWidget {
-  const _TarjetaParte({required this.part});
+  const _TarjetaParte({super.key, required this.part});
   final SpeakingPart part;
 
   @override
@@ -70,7 +86,7 @@ class _TarjetaParte extends StatefulWidget {
 
 class _TarjetaParteState extends State<_TarjetaParte> {
   final _azar = Random();
-  late String _prompt;
+  late int _indice;
   Timer? _tic;
   int _restan = 0;
   bool _corriendo = false;
@@ -78,7 +94,7 @@ class _TarjetaParteState extends State<_TarjetaParte> {
   @override
   void initState() {
     super.initState();
-    _prompt = widget.part.prompts[_azar.nextInt(widget.part.prompts.length)];
+    _indice = _azar.nextInt(widget.part.variants);
     _restan = widget.part.seconds;
   }
 
@@ -88,10 +104,12 @@ class _TarjetaParteState extends State<_TarjetaParte> {
     super.dispose();
   }
 
+  /// Otro distinto del que hay: pulsar "otro" y que salga el mismo parece un
+  /// botón roto, y con seis fotos pasaba una vez de cada seis.
   void _otroPrompt() {
-    setState(() {
-      _prompt = widget.part.prompts[_azar.nextInt(widget.part.prompts.length)];
-    });
+    final n = widget.part.variants;
+    if (n < 2) return;
+    setState(() => _indice = (_indice + 1 + _azar.nextInt(n - 1)) % n);
   }
 
   void _alternarReloj() {
@@ -176,12 +194,23 @@ class _TarjetaParteState extends State<_TarjetaParte> {
               color: paperBg,
               border: Border.all(color: paperRule),
             ),
-            child: Text(
-              _prompt,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: paperInk,
-                height: 1.5,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.promptAt(_indice),
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: paperInk,
+                    height: 1.5,
+                  ),
+                ),
+                // La pregunta arriba y las fotos debajo, como en la hoja del
+                // examen.
+                if (p.photosAt(_indice).isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _Fotos(fotos: p.photosAt(_indice)),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -236,6 +265,145 @@ class _TarjetaParteState extends State<_TarjetaParte> {
       ),
     );
   }
+}
+
+/// The photograph or photographs of a Part 2 task.
+///
+/// Two sit side by side when there is room, as on the exam sheet, and one
+/// above the other when there is not: at 150 pixels wide nobody can see what
+/// is in them.
+class _Fotos extends StatelessWidget {
+  const _Fotos({required this.fotos});
+  final List<SpeakingPhoto> fotos;
+
+  /// La celda tiene que medir esto para que dos fotos lado a lado pasen de
+  /// 200 px cada una, descontado el relleno de la tarjeta y del papel.
+  static const _celdaParaDos = 480.0;
+
+  @override
+  Widget build(BuildContext context) {
+    // El ancho se le pregunta a la rejilla y no a un LayoutBuilder: las filas
+    // de igual altura miden con IntrinsicHeight, y ahí no puede haber uno.
+    final celda =
+        AnchoCelda.maybeOf(context) ?? MediaQuery.sizeOf(context).width;
+    final piezas = [
+      for (final (i, f) in fotos.indexed)
+        _Foto(
+          foto: f,
+          letra: fotos.length > 1 ? String.fromCharCode(65 + i) : null,
+        ),
+    ];
+    if (piezas.length > 1 && celda >= _celdaParaDos) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (i, pieza) in piezas.indexed) ...[
+            if (i > 0) const SizedBox(width: 10),
+            Expanded(child: pieza),
+          ],
+        ],
+      );
+    }
+    return Column(
+      children: [
+        for (final (i, pieza) in piezas.indexed) ...[
+          if (i > 0) const SizedBox(height: 10),
+          pieza,
+        ],
+      ],
+    );
+  }
+}
+
+class _Foto extends StatelessWidget {
+  const _Foto({required this.foto, this.letra});
+  final SpeakingPhoto foto;
+
+  /// A or B when there are two, so the answer can say which one it means.
+  final String? letra;
+
+  String get _nombre => letra == null ? 'Photograph' : 'Photograph $letra';
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // La etiqueta dice que es una foto y que se amplía, no lo que hay en
+      // ella: describirla es justo el ejercicio.
+      // container: sin él la etiqueta y el toque se funden con el nodo de la
+      // tarjeta, y un lector de pantalla anuncia la tarjeta entera como un
+      // botón que amplía la foto.
+      Semantics(
+        container: true,
+        button: true,
+        label: '$_nombre. Tap to enlarge.',
+        child: InkWell(
+          onTap: () => _ampliar(context),
+          child: AspectRatio(
+            aspectRatio: 3 / 2,
+            // El color de fondo ocupa el sitio mientras la imagen llega, para
+            // que la tarjeta no salte de tamaño al cargarla.
+            child: ColoredBox(
+              color: paperRule,
+              child: Image.asset(
+                foto.asset,
+                fit: BoxFit.cover,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        '${letra == null ? '' : '$letra · '}Photo: ${foto.by} / Unsplash',
+        style: const TextStyle(color: paperGrey, fontSize: 11),
+      ),
+    ],
+  );
+
+  void _ampliar(BuildContext context) => showDialog<void>(
+    context: context,
+    builder: (dialogo) => Dialog(
+      insetPadding: const EdgeInsets.all(12),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: InteractiveViewer(
+              maxScale: 4,
+              child: Image.asset(
+                foto.asset,
+                fit: BoxFit.contain,
+                excludeFromSemantics: true,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  // El crédito enlaza con el original: es la forma de
+                  // atribución que de verdad le sirve a quien hizo la foto.
+                  child: TextButton(
+                    onPressed: () => abrirEnlace(foto.page),
+                    child: Text('Photo: ${foto.by} / Unsplash'),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(dialogo).pop(),
+                icon: const Icon(Icons.close_rounded),
+                tooltip: 'Close',
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _Lista extends StatelessWidget {
