@@ -276,9 +276,18 @@ class _Fotos extends StatelessWidget {
   const _Fotos({required this.fotos});
   final List<SpeakingPhoto> fotos;
 
-  /// La celda tiene que medir esto para que dos fotos lado a lado pasen de
-  /// 200 px cada una, descontado el relleno de la tarjeta y del papel.
-  static const _celdaParaDos = 480.0;
+  /// Lo que la tarjeta y el papel le quitan de ancho a las fotos.
+  static const _relleno = 62.0;
+  static const _hueco = 10.0;
+
+  /// Por debajo de esto una foto no se ve lo bastante para compararla.
+  static const _anchoMinimo = 200.0;
+
+  /// Si las fotos caben en fila dentro de una celda de este ancho. Vale igual
+  /// para las dos de B2 que para las tres de C1.
+  static bool enFila(int fotos, double celda) =>
+      fotos > 1 &&
+      (celda - _relleno - _hueco * (fotos - 1)) / fotos >= _anchoMinimo;
 
   @override
   Widget build(BuildContext context) {
@@ -293,12 +302,12 @@ class _Fotos extends StatelessWidget {
           letra: fotos.length > 1 ? String.fromCharCode(65 + i) : null,
         ),
     ];
-    if (piezas.length > 1 && celda >= _celdaParaDos) {
+    if (enFila(piezas.length, celda)) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final (i, pieza) in piezas.indexed) ...[
-            if (i > 0) const SizedBox(width: 10),
+            if (i > 0) const SizedBox(width: _hueco),
             Expanded(child: pieza),
           ],
         ],
@@ -307,7 +316,7 @@ class _Fotos extends StatelessWidget {
     return Column(
       children: [
         for (final (i, pieza) in piezas.indexed) ...[
-          if (i > 0) const SizedBox(height: 10),
+          if (i > 0) const SizedBox(height: _hueco),
           pieza,
         ],
       ],
