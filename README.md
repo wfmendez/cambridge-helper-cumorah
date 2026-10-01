@@ -16,9 +16,11 @@ it, and the name should not suggest otherwise.
   grouped by topic, plus a glossary of every exam task type with a worked
   example of each. What a *cloze* is, what a *gapped text* is, what
   *multiple matching* means.
-- **Written for Cíl** — eight original B2 papers: four Use of English and
-  four Reading, with 208 questions, included passages and an explanation for
-  every answer. Filter by skill; attempt history remains separate per paper.
+- **Written for Cíl** — eleven original papers with 304 questions, included
+  passages and an explanation for every answer: three B1 Reading papers in
+  the real B1 shape (six parts, 32 questions), and eight at B2, four Use of
+  English and four Reading. You see the ones at your level and below, your own
+  level first. Filter by skill; attempt history remains separate per paper.
 - **Mock test** — sit the official paper on paper, type your answers in, and it marks
   them part by part. B1 Preliminary, B2 First sample paper 2 and the C1
   Advanced sample paper from the official handbook. The Listening audio is
@@ -29,16 +31,22 @@ it, and the name should not suggest otherwise.
   for the source PDF or audio. This feedback works offline.
 - **Writing** — 22 original tasks with commented model answers: 5 at B1,
   10 at B2 and 7 at C1. A paper-white editor, live word count, clock and saved
-  drafts. Optional AI reviews explain corrections, estimate the four writing
-  subscales and suggest next steps without replacing the original answer.
+  drafts. Optional AI reviews start with whether the answer does what the task
+  asked — each required point marked covered, partly or missing, with the
+  phrase that shows it — and, when it does not, a short plan for how it could,
+  built on what the learner wrote. Then they explain corrections, estimate the
+  four writing subscales and suggest next steps, without replacing the answer.
 - **Free listening** — 12 direct British Council lesson links, four each at
   B1, B2 and C1, with audio, transcripts and exercises on the publisher’s site.
   Open them from Mock test. They need internet; audio is not redistributed.
   Native apps open the device browser and offer a copyable link as a fallback.
 - **Speaking** — a timer per part, a prompt that shuffles, and the phrases
-  examiners are listening for, including ways to open an answer. Part 2 comes
-  with photographs, because it cannot be practised without them: one to
-  describe at B1, two to compare from B2 up.
+  examiners are listening for, including ways to open an answer. The four
+  parts are written separately for B1, B2 and C1, with each exam's own
+  timings: B1 talks about your own life and a concrete situation, C1 about
+  questions with no right side. Part 2 comes with photographs, because it
+  cannot be practised without them: one to describe at B1, two to compare at
+  B2, three to choose two from at C1.
 - **The exam** — how each paper works, what it weighs, how it is scored, and
   what changes between B2 and C1.
 - **Your name & goal** — an optional nickname, personal reason, target date,

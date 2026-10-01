@@ -3,6 +3,8 @@ import 'package:cil/cambridge_data.dart';
 import 'package:cil/b1_data.dart';
 import 'package:cil/cil_extra_papers.dart';
 import 'package:cil/cil_paper_b1.dart';
+import 'package:cil/cil_paper_b1_2.dart';
+import 'package:cil/cil_paper_b1_3.dart';
 import 'package:cil/listening_resources.dart';
 import 'package:cil/main.dart';
 import 'package:cil/screens/listening_library.dart';
@@ -17,12 +19,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'audio_falso.dart';
 
 void main() {
-  test('nine original papers have complete keys, text and explanations', () {
+  test('eleven original papers have complete keys, text and explanations', () {
     final originals = cambridgePapers
         .where((p) => p.source == PaperSource.cil)
         .toList();
-    expect(originals.length, 9);
-    expect(originals.fold<int>(0, (n, p) => n + p.questions), 240);
+    expect(originals.length, 11);
+    expect(originals.fold<int>(0, (n, p) => n + p.questions), 304);
     expect(
       cambridgePapers.map((p) => p.id).toSet().length,
       cambridgePapers.length,
@@ -73,23 +75,47 @@ void main() {
     }
   });
 
-  test('the B1 paper has the shape of the real B1 Reading paper', () {
-    expect(cilPaperB1.level, ExamLevel.b1);
-    expect(cilPaperB1.minutes, 45);
-    expect(cilPaperB1.questions, 32);
-    expect(cilPaperB1.maxMarks, 32);
-    expect(cilPaperB1.parts.map((p) => p.questions), [5, 5, 5, 5, 6, 6]);
-    // Same shape as the official sample, part by part.
-    expect(
-      cilPaperB1.parts.map((p) => (p.from, p.to, p.type)),
-      b1Reading.parts.map((p) => (p.from, p.to, p.type)),
-    );
+  test('every B1 paper has the shape of the real B1 Reading paper', () {
+    final b1 = [cilPaperB1, cilB1Paper2, cilB1Paper3];
+    for (final paper in b1) {
+      expect(paper.level, ExamLevel.b1, reason: paper.id);
+      expect(paper.minutes, 45, reason: paper.id);
+      expect(paper.questions, 32, reason: paper.id);
+      expect(paper.maxMarks, 32, reason: paper.id);
+      expect(paper.id, endsWith('-reading'));
+      // Same shape as the official sample, part by part.
+      expect(
+        paper.parts.map((p) => (p.from, p.to, p.type)),
+        b1Reading.parts.map((p) => (p.from, p.to, p.type)),
+        reason: paper.id,
+      );
+      // No letter is the answer too often: a key of all Bs teaches guessing.
+      for (final part in paper.parts.where((p) => p.number != 6)) {
+        final letras = part.answers.values.toSet();
+        expect(
+          letras.length,
+          greaterThanOrEqualTo(3),
+          reason: '${paper.id} P${part.number}',
+        );
+      }
+    }
+    // Three different papers: no text is reused between them.
+    final textos = [
+      for (final paper in b1)
+        for (final part in paper.parts) part.passage ?? part.items.first.stem!,
+    ];
+    expect(textos.toSet(), hasLength(textos.length));
   });
 
   test(
     'the newer papers mark realistic keys to full marks and blanks to zero',
     () {
-      for (final paper in [...extraCilPapers, cilPaperB1]) {
+      for (final paper in [
+        ...extraCilPapers,
+        cilPaperB1,
+        cilB1Paper2,
+        cilB1Paper3,
+      ]) {
         final responses = <int, String>{};
         for (final part in paper.parts) {
           for (var q = part.from; q <= part.to; q++) {
@@ -193,7 +219,7 @@ void main() {
       // B2 is the default goal, and B2 includes the B1 material below it.
       expect(
         find.text(
-          '5 papers · 4 B2, 1 B1 · 120 questions · every answer explained',
+          '7 papers · 4 B2, 3 B1 · 184 questions · every answer explained',
         ),
         findsOneWidget,
       );
@@ -235,7 +261,7 @@ void main() {
     await tester.tap(find.text('Mock test').first);
     await tester.pumpAndSettle();
     expect(
-      find.text('1 B1 paper · 32 questions · every answer explained'),
+      find.text('3 B1 papers · 96 questions · every answer explained'),
       findsOneWidget,
     );
     expect(find.text('Cíl B1 Paper 1 · Reading'), findsOneWidget);

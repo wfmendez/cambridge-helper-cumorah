@@ -11,6 +11,8 @@ import 'cil_paper.dart';
 import 'cil_paper_2.dart';
 import 'cil_extra_papers.dart';
 import 'cil_paper_b1.dart';
+import 'cil_paper_b1_2.dart';
+import 'cil_paper_b1_3.dart';
 
 final List<ExamPaper> cambridgePapers = [
   b1Reading,
@@ -18,6 +20,8 @@ final List<ExamPaper> cambridgePapers = [
   b1Writing,
   b1Speaking,
   cilPaperB1,
+  cilB1Paper2,
+  cilB1Paper3,
   cilPaper1,
   cilPaper2,
   ...extraCilPapers,
