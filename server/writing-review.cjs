@@ -98,6 +98,25 @@ class ReviewError extends Error {
 
 const incomplete = reason => new ReviewError(502, 'The review was incomplete. Please try again.', reason);
 
+// Las palabras que sostienen cualquier frase en inglés. En prosa real, de un
+// alumno de B1 o de un nativo, son entre un tercio y la mitad del texto.
+const common = new Set(('the of and to a in is it that was for on are as with his they i at be this ' +
+  'have from or one had by but not what all were we when your can there an each which she do how ' +
+  'their if will up other about out many then them these so some her would like him into has two ' +
+  'more no way could people my than first been who its now did get made may he me you our us am ' +
+  'because also very too after before most only where why should does any much').split(' '));
+
+/// Si el texto se lee como frases en inglés. Treinta teclas al azar pasan el
+/// mínimo de palabras, y mandarlas a revisar solo consigue que el modelo no
+/// tenga nada que decir, la respuesta no cumpla el esquema y el alumno lea
+/// "servicio no disponible" — además de pagar la llamada. El umbral es bajo a
+/// propósito: rechazar una redacción de verdad sería peor que dejar pasar ruido.
+function looksLikeEnglish(text) {
+  const words = text.toLowerCase().match(/[a-z]+/g) || [];
+  if (!words.length) return false;
+  return words.filter(word => common.has(word)).length / words.length >= 0.15;
+}
+
 function validateInput(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
       typeof body.taskId !== 'string' || !Object.hasOwn(tasks, body.taskId) ||
@@ -110,6 +129,10 @@ function validateInput(body) {
     throw new ReviewError(413, 'Please keep your answer under 800 words and 8,000 characters.');
   }
   if (words < 30) throw new ReviewError(400, 'Write at least 30 words before requesting a review.');
+  if (!looksLikeEnglish(text)) {
+    throw new ReviewError(422, 'This does not read as an answer in English yet. Write it in full ' +
+      'English sentences, then ask for a review. Your draft is safe.');
+  }
   return { task: tasks[body.taskId], text, words };
 }
 

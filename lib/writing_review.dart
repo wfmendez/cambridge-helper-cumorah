@@ -191,6 +191,11 @@ class WritingReviewClient {
         throw WritingReviewException(switch (response.statusCode) {
           429 => 'Too many reviews. Please wait a few minutes and try again.',
           413 => 'Keep your answer under 800 words and 8,000 characters.',
+          // El servidor no manda a revisar lo que no se lee como inglés, y
+          // decirlo es más útil que "no disponible", que además sería falso.
+          422 =>
+            'This does not read as an answer in English yet. Write it in full '
+                'English sentences, then ask for a review. Your draft is safe.',
           400 => 'Choose a task and write at least 30 words before requesting a review.',
           _ => 'Writing review is temporarily unavailable. Your draft is safe. Try again later.',
         });
