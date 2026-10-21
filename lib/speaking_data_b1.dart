@@ -23,16 +23,6 @@ const List<SpeakingPart> speakingPartsB1 = [
         'The examiner asks each of you a few simple questions about yourself: '
         'where you live, what you do, what you like. Answer in a sentence or '
         'two, and add one detail.',
-    prompts: [
-      'Where do you live, and who do you live with?',
-      'What do you usually do at the weekend?',
-      'Tell us about your favourite food.',
-      'How do you get to school or work every day?',
-      'What do you like doing with your friends?',
-      'What is your favourite subject, or the best part of your job? Why?',
-      'What did you do last weekend?',
-      'What are you going to do this evening?',
-    ],
     openers: [
       'I live in… with…',
       'I usually…, because…',
@@ -53,38 +43,6 @@ const List<SpeakingPart> speakingPartsB1 = [
         'About one minute on your own, describing a photograph. The examiner '
         'tells you what it shows; you say what you can see. Nobody interrupts '
         'you.',
-    photoTasks: [
-      PhotoTask(
-        'Your photograph shows people cooking at home. Tell us what you can '
-        'see in the photograph.',
-        [Fotos.cooking],
-      ),
-      PhotoTask(
-        'Your photograph shows people playing a sport outdoors. Tell us what '
-        'you can see in the photograph.',
-        [Fotos.football],
-      ),
-      PhotoTask(
-        'Your photograph shows people at a market. Tell us what you can see '
-        'in the photograph.',
-        [Fotos.market],
-      ),
-      PhotoTask(
-        'Your photograph shows a family by the sea. Tell us what you can see '
-        'in the photograph.',
-        [Fotos.beach],
-      ),
-      PhotoTask(
-        'Your photograph shows people waiting for a train. Tell us what you '
-        'can see in the photograph.',
-        [Fotos.station],
-      ),
-      PhotoTask(
-        'Your photograph shows people on a camping trip. Tell us what you can '
-        'see in the photograph.',
-        [Fotos.camping],
-      ),
-    ],
     openers: [
       'In this photograph I can see…',
       'In the background there is… / there are…',
@@ -108,22 +66,6 @@ const List<SpeakingPart> speakingPartsB1 = [
         'your partner talk about them for two or three minutes and try to '
         'choose one. In the test the ideas are drawings; here they are '
         'written.',
-    prompts: [
-      'A friend is visiting your town for one day. Talk about the things you '
-          'could do together — a museum, a picnic, shopping, a boat trip, the '
-          'cinema — and decide which would be best.',
-      'Your class wants to buy a present for a teacher who is leaving. Talk '
-          'about the ideas — flowers, a book, a photo of the class, '
-          'chocolates, a plant — and decide which is the best present.',
-      'A boy wants to get fitter. Talk about the activities he could try — '
-          'running, swimming, football, cycling, dancing — and decide which '
-          'would be best for him.',
-      'Some students are planning an end-of-term party. Talk about the places '
-          'they could have it — a park, a classroom, a café, the beach, '
-          'someone’s home — and decide which is best.',
-      'A family is choosing a pet. Talk about the animals — a dog, a cat, a '
-          'fish, a rabbit, a bird — and decide which would be best for them.',
-    ],
     openers: [
       'What do you think about…?',
       'I think… is a good idea, because…',
@@ -144,14 +86,6 @@ const List<SpeakingPart> speakingPartsB1 = [
         'The examiner asks you both questions on the topic of Part 3: what you '
         'like, what you usually do, what you think. Give your opinion and say '
         'why.',
-    prompts: [
-      'Do you like visiting new places? Why, or why not?',
-      'Do you prefer giving presents or receiving them? Why?',
-      'Which sports are popular in your country? Do you like them?',
-      'Do you prefer parties at home or in other places? Why?',
-      'Is it better to spend your free time with friends or with family?',
-      'Would you like to have a pet? Which one, and why?',
-    ],
     openers: [
       'I really like…, because…',
       'I prefer… to…, because…',
@@ -162,5 +96,173 @@ const List<SpeakingPart> speakingPartsB1 = [
         'Never stop at “yes” or “no”. An opinion, a reason and an example make '
         'a complete B1 answer: “I prefer the beach, because I love swimming — '
         'last summer I went every day.”',
+  ),
+];
+
+/// Six B1 tests, one for each photograph.
+const List<SpeakingTest> speakingTestsB1 = [
+  SpeakingTest(
+    interview: [
+      'Where do you live, and who do you live with?',
+      'What do you usually do at the weekend?',
+      'Tell us about your favourite food.',
+      'What did you do last weekend?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows people cooking at home. Tell us what you can '
+      'see in the photograph.',
+      [Fotos.cooking],
+    ),
+    diagram: DiagramTask(
+      'What could you do together?',
+      [
+        'Visit a museum',
+        'Have a picnic',
+        'Go shopping',
+        'Take a boat trip',
+        'Go to the cinema',
+      ],
+      'Which would be the best?',
+      situation:
+          'A friend from another country is visiting your town for one day.',
+    ),
+    discussion: [
+      'Do you like visiting new places? Why, or why not?',
+      'What do visitors like to see in your town?',
+      'Do you prefer holidays in summer or in winter?',
+      'Would you like to live in another country one day?',
+    ],
+  ),
+  SpeakingTest(
+    interview: [
+      'How do you get to school or work every day?',
+      'What do you like doing with your friends?',
+      'What is your favourite subject, or the best part of your job? Why?',
+      'What are you going to do this evening?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows people playing a sport outdoors. Tell us what '
+      'you can see in the photograph.',
+      [Fotos.football],
+    ),
+    diagram: DiagramTask(
+      'Which present could you buy?',
+      ['Flowers', 'A book', 'A photo of the class', 'Chocolates', 'A plant'],
+      'Which is the best present?',
+      situation:
+          'Your class wants to buy a present for a teacher who is leaving.',
+    ),
+    discussion: [
+      'Do you prefer giving presents or receiving them? Why?',
+      'What is the best present you have ever had?',
+      'Do you like making presents yourself?',
+      'How do people in your country celebrate birthdays?',
+    ],
+  ),
+  SpeakingTest(
+    interview: [
+      'What time do you usually get up?',
+      'What kind of music do you like?',
+      'Where did you go on your last holiday?',
+      'What are you going to do next summer?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows people at a market. Tell us what you can see '
+      'in the photograph.',
+      [Fotos.market],
+    ),
+    diagram: DiagramTask(
+      'What activities could he try?',
+      ['Running', 'Swimming', 'Football', 'Cycling', 'Dancing'],
+      'Which would be best for him?',
+      situation: 'A boy wants to get fitter.',
+    ),
+    discussion: [
+      'Which sports are popular in your country? Do you like them?',
+      'Do you prefer doing sport or watching it?',
+      'Is it better to do sport alone or in a team?',
+      'What did you do in sports lessons at school?',
+    ],
+  ),
+  SpeakingTest(
+    interview: [
+      'Tell us about your home.',
+      'What do you usually have for breakfast?',
+      'What did you do on your last birthday?',
+      'What are you going to do next weekend?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows a family by the sea. Tell us what you can see '
+      'in the photograph.',
+      [Fotos.beach],
+    ),
+    diagram: DiagramTask(
+      'Where could they have it?',
+      ['A park', 'A classroom', 'A café', 'The beach', 'Someone’s home'],
+      'Which place is the best?',
+      situation: 'Some students are planning an end-of-term party.',
+    ),
+    discussion: [
+      'Do you prefer parties at home or in other places? Why?',
+      'What do you like to eat at parties?',
+      'Do you like dancing? Why, or why not?',
+      'Tell us about the last party you went to.',
+    ],
+  ),
+  SpeakingTest(
+    interview: [
+      'Do you have any brothers or sisters? Tell us about them.',
+      'What do you like watching on TV?',
+      'What was your favourite toy when you were a child?',
+      'Where would you like to go next year?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows people waiting for a train. Tell us what you '
+      'can see in the photograph.',
+      [Fotos.station],
+    ),
+    diagram: DiagramTask(
+      'Which animal could they get?',
+      ['A dog', 'A cat', 'A fish', 'A rabbit', 'A bird'],
+      'Which would be best for them?',
+      situation: 'A family is choosing a pet.',
+    ),
+    discussion: [
+      'Would you like to have a pet? Which one, and why?',
+      'Is it a good idea for children to have pets?',
+      'Is it easier to have a pet in a city or in the countryside?',
+      'Have you ever been to a zoo? Did you like it?',
+    ],
+  ),
+  SpeakingTest(
+    interview: [
+      'Tell us about your best friend.',
+      'What do you do in the evenings?',
+      'What did you like studying at school?',
+      'What are you going to do after this test?',
+    ],
+    photos: PhotoTask(
+      'Your photograph shows people on a camping trip. Tell us what you can '
+      'see in the photograph.',
+      [Fotos.camping],
+    ),
+    diagram: DiagramTask(
+      'What could she do?',
+      [
+        'Join a sports club',
+        'Take a cooking class',
+        'Help at an animal shelter',
+        'Join a music group',
+        'Go to a language café',
+      ],
+      'Which would be the best way to make friends?',
+      situation: 'A girl has moved to a new town and wants to make friends.',
+    ),
+    discussion: [
+      'Is it better to spend your free time with friends or with family?',
+      'How did you meet your best friend?',
+      'Is it easy to make friends online?',
+      'What makes someone a good friend?',
+    ],
   ),
 ];

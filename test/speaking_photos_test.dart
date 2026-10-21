@@ -18,10 +18,23 @@ import 'audio_falso.dart';
 SpeakingPart _parte(ExamLevel level, int n) =>
     speakingPartsFor(level).firstWhere((p) => p.number == n);
 
+List<PhotoTask> _tareas(ExamLevel level) => [
+  for (final t in speakingTestsFor(level)) t.photos,
+];
+
 /// Every photograph a level's Part 2 can show.
 List<SpeakingPhoto> _fotos(ExamLevel level) => [
-  for (final task in _parte(level, 2).photoTasks) ...task.photos,
+  for (final task in _tareas(level)) ...task.photos,
 ];
+
+/// The test on screen, read from its "Test 3 of 12".
+SpeakingTest _actual(WidgetTester tester, ExamLevel level) {
+  final rotulo = tester
+      .widget<Text>(find.textContaining(RegExp(r'^Test \d+ of ')))
+      .data!;
+  final n = int.parse(RegExp(r'\d+').firstMatch(rotulo)![0]!);
+  return speakingTestsFor(level)[n - 1];
+}
 
 final _imagen = find.byWidgetPredicate(
   (w) =>
@@ -57,21 +70,9 @@ void main() {
       expect(parts.map((p) => p.number), [1, 2, 3, 4], reason: level.cefr);
       for (final p in parts) {
         final donde = '${level.cefr} Part ${p.number}';
-        expect(p.variants, greaterThanOrEqualTo(4), reason: donde);
         expect(p.openers.length, greaterThanOrEqualTo(4), reason: donde);
         expect(p.tip, isNotNull, reason: donde);
-        // No prompt twice within a part.
-        expect({
-          for (var i = 0; i < p.variants; i++) p.promptAt(i),
-        }, hasLength(p.variants));
       }
-    }
-    // Nothing is shared between levels: the questions are written for each.
-    for (final n in [1, 3, 4]) {
-      final preguntas = [
-        for (final level in ExamLevel.values) ..._parte(level, n).prompts,
-      ];
-      expect(preguntas.toSet(), hasLength(preguntas.length), reason: 'Part $n');
     }
     // B1 talks for less on the shared task; C1's discussion is the long one.
     expect(_parte(ExamLevel.b1, 3).seconds, 180);
@@ -80,6 +81,47 @@ void main() {
     for (final level in ExamLevel.values) {
       expect(_parte(level, 2).seconds, 60);
     }
+  });
+
+  test('each level comes as whole tests, B2 with the most', () {
+    expect(speakingTestsFor(ExamLevel.b1), hasLength(6));
+    expect(speakingTestsFor(ExamLevel.b2), hasLength(12));
+    expect(speakingTestsFor(ExamLevel.c1), hasLength(6));
+    for (final level in ExamLevel.values) {
+      for (final (i, t) in speakingTestsFor(level).indexed) {
+        final donde = '${level.cefr} test ${i + 1}';
+        expect(t.interview, hasLength(4), reason: donde);
+        expect(t.discussion, hasLength(4), reason: donde);
+        // Five ideas round the question, as on the exam sheet.
+        expect(t.diagram.options, hasLength(5), reason: donde);
+        expect(t.diagram.options.toSet(), hasLength(5), reason: donde);
+        expect(t.diagram.decision, endsWith('?'), reason: donde);
+      }
+      // B1 starts Part 3 from a situation; the others from the question.
+      final situaciones = speakingTestsFor(level)
+          .map((t) => t.diagram.situation);
+      expect(
+        situaciones.every((s) => s != null),
+        level == ExamLevel.b1,
+        reason: level.cefr,
+      );
+      expect(
+        situaciones.every((s) => s == null),
+        level != ExamLevel.b1,
+        reason: level.cefr,
+      );
+    }
+    // Nothing is asked twice, in a level or across them: the questions are
+    // written for each test.
+    final todas = [
+      for (final level in ExamLevel.values)
+        for (final t in speakingTestsFor(level)) ...[
+          ...t.interview,
+          ...t.discussion,
+          t.diagram.question,
+        ],
+    ];
+    expect(todas.toSet(), hasLength(todas.length));
   });
 
   test('B1 describes one photograph, B2 compares two, C1 chooses from '
@@ -92,19 +134,24 @@ void main() {
       (ExamLevel.b2, 2),
       (ExamLevel.c1, 3),
     ]) {
-      final tasks = _parte(level, 2).photoTasks;
-      expect(tasks, hasLength(6), reason: level.cefr);
+      final tasks = _tareas(level);
       expect(tasks.every((t) => t.photos.length == cuantas), isTrue);
+      // No two tests show the same photographs.
+      expect(
+        tasks.map((t) => t.photos.map((f) => f.file).toSet()).toSet(),
+        hasLength(tasks.length),
+        reason: level.cefr,
+      );
     }
     // C1 asks two things at once; that is the point of its long turn.
-    for (final task in _parte(ExamLevel.c1, 2).photoTasks) {
+    for (final task in _tareas(ExamLevel.c1)) {
       expect(task.question, contains(', and '));
     }
   });
 
   test('a C1 set is a B2 pair with a third picture on the same theme', () {
-    final b2 = _parte(ExamLevel.b2, 2).photoTasks;
-    final c1 = _parte(ExamLevel.c1, 2).photoTasks;
+    final b2 = _tareas(ExamLevel.b2);
+    final c1 = _tareas(ExamLevel.c1);
     for (var i = 0; i < 6; i++) {
       expect(c1[i].photos.take(2), b2[i].photos, reason: 'set $i');
       // b2-study-library and b2-study-cafe are joined by c1-study-park.
@@ -231,6 +278,97 @@ void main() {
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
     expect(find.byType(InteractiveViewer), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('Part 3 is a diagram: the question in the middle, the five '
+      'ideas round it, beside it where there is room', (tester) async {
+    await _speaking(tester, ExamLevel.b2, ancho: 700);
+    final tarea = _actual(tester, ExamLevel.b2).diagram;
+
+    final pregunta = tester.getCenter(find.text(tarea.question));
+    for (final idea in tarea.options) {
+      expect(find.text(idea), findsOneWidget, reason: idea);
+    }
+    Offset idea(int i) => tester.getCenter(find.text(tarea.options[i]));
+    // Two on the left, two on the right, one underneath, as on the sheet.
+    expect(idea(0).dx, lessThan(pregunta.dx));
+    expect(idea(2).dx, lessThan(pregunta.dx));
+    expect(idea(1).dx, greaterThan(pregunta.dx));
+    expect(idea(3).dx, greaterThan(pregunta.dx));
+    expect(idea(4).dy, greaterThan(pregunta.dy));
+    expect(idea(4).dx, closeTo(pregunta.dx, 1));
+    expect(find.textContaining(tarea.decision), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  for (final level in ExamLevel.values) {
+    testWidgets('${level.cefr} on a phone: the ideas go above and below the '
+        'question, and every test fits', (tester) async {
+      await _speaking(tester, level, ancho: 360);
+      final vistos = <int>{};
+      // Every test of the level, not only the one that came up: a long idea
+      // in any of them would overflow its box.
+      while (vistos.length < speakingTestsFor(level).length) {
+        final tarea = _actual(tester, level).diagram;
+        vistos.add(speakingTestsFor(level).indexOf(_actual(tester, level)));
+        final pregunta = tester.getCenter(find.text(tarea.question));
+        Offset idea(int i) => tester.getCenter(find.text(tarea.options[i]));
+        expect(idea(0).dy, lessThan(pregunta.dy));
+        expect(idea(1).dy, lessThan(pregunta.dy));
+        for (final i in [2, 3, 4]) {
+          expect(idea(i).dy, greaterThan(pregunta.dy));
+        }
+        expect(idea(4).dx, closeTo(pregunta.dx, 1));
+        if (level == ExamLevel.b1) {
+          expect(find.text(tarea.situation!), findsOneWidget);
+        }
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.text('Another test'));
+        await tester.pumpAndSettle();
+      }
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+
+  testWidgets('another test changes all four parts without leaving the page', (
+    tester,
+  ) async {
+    await _speaking(tester, ExamLevel.b2, ancho: 360);
+    final antes = _actual(tester, ExamLevel.b2);
+    expect(find.text(antes.interview.first), findsOneWidget);
+
+    await tester.tap(find.text('Another test'));
+    await tester.pumpAndSettle();
+    final despues = _actual(tester, ExamLevel.b2);
+    expect(despues, isNot(same(antes)));
+    expect(find.text(antes.interview.first), findsNothing);
+    expect(find.text(despues.interview.first), findsOneWidget);
+    expect(find.text(despues.diagram.question), findsOneWidget);
+    expect(find.text(despues.discussion.last), findsOneWidget);
+    expect(find.text(despues.photos.question), findsOneWidget);
+
+    // The same from the foot of the page, which takes you back to Part 1.
+    final abajo = find.text('Try another test');
+    // The list builds lazily: the foot of the page exists only once it is
+    // scrolled to.
+    await tester.scrollUntilVisible(
+      abajo,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    final lista = find.byType(Scrollable).first;
+    expect(
+      tester.state<ScrollableState>(lista).position.pixels,
+      greaterThan(0),
+    );
+    await tester.tap(abajo);
+    await tester.pumpAndSettle();
+    expect(_actual(tester, ExamLevel.b2), isNot(same(despues)));
+    expect(tester.state<ScrollableState>(lista).position.pixels, 0);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
   });
