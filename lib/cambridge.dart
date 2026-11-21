@@ -80,6 +80,16 @@ enum ExamLevel {
 
   /// 'B1 Preliminary (PET)' — the full introduction.
   String get full => '$name ($code)';
+
+  /// Whether Cambridge sets a for Schools version of this exam.
+  ///
+  /// B1 Preliminary and B2 First have one; C1 Advanced does not — schools
+  /// that take C1 sit the same C1 Advanced as everyone else.
+  bool get hasSchoolsVersion => this != ExamLevel.c1;
+
+  /// 'B2 First for Schools', or the plain name where that is what you sit.
+  String examName({required bool schools}) =>
+      schools && hasSchoolsVersion ? '$name for Schools' : name;
 }
 
 enum AnswerType {

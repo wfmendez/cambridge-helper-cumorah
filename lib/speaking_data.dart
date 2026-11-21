@@ -19,6 +19,7 @@ library;
 import 'cambridge.dart';
 import 'speaking_data_b1.dart';
 import 'speaking_data_c1.dart';
+import 'speaking_data_schools.dart';
 import 'speaking_photos.dart';
 
 /// A photograph for Part 2, and who took it.
@@ -132,12 +133,16 @@ List<SpeakingPart> speakingPartsFor(ExamLevel level) => switch (level) {
   ExamLevel.c1 => speakingPartsC1,
 };
 
-/// The tests for a level.
-List<SpeakingTest> speakingTestsFor(ExamLevel level) => switch (level) {
-  ExamLevel.b1 => speakingTestsB1,
-  ExamLevel.b2 => speakingTests,
-  ExamLevel.c1 => speakingTestsC1,
-};
+/// The tests for a level, general or for Schools.
+///
+/// C1 has no for Schools version, so asking for one there gives the general
+/// tests: that is the exam a school sitting C1 takes.
+List<SpeakingTest> speakingTestsFor(ExamLevel level, {bool schools = false}) =>
+    switch (level) {
+      ExamLevel.b1 => schools ? speakingTestsB1Schools : speakingTestsB1,
+      ExamLevel.b2 => schools ? speakingTestsB2Schools : speakingTests,
+      ExamLevel.c1 => speakingTestsC1,
+    };
 
 /// B2 First. The other two levels are in speaking_data_b1.dart and
 /// speaking_data_c1.dart.

@@ -17,6 +17,7 @@ const _kPractica = 'practica_marcador';
 const _kFallos = 'fallos_pendientes';
 const _kBorrador = 'borrador_writing';
 const _kMeta = 'target_level';
+const _kSchools = 'for_schools';
 const _kTema = 'theme_mode';
 const _kTutorial = 'tutorial_seen';
 const _kProfile = 'learner_profile';
@@ -185,8 +186,32 @@ class AppState extends ChangeNotifier {
 
   Future<void> setGoal(ExamLevel level) async {
     await _prefs.setString(_kMeta, level.name);
+    // C1 Advanced no tiene versión for Schools: elegirlo es elegir el examen
+    // general, y dejar el modo encendido mostraría un examen que no existe.
+    if (!level.hasSchoolsVersion) await _prefs.setBool(_kSchools, false);
     notifyListeners();
     await restoreLocalReminder(profile, level.cefr);
+  }
+
+  // ── General or for Schools ─────────────────────────────────────────────────
+
+  /// Whether you are preparing the for Schools version of your exam.
+  ///
+  /// Same format, timing and marks as the general exam; the topics are for
+  /// teenagers. Only A2 Key, B1 Preliminary and B2 First have one, so at C1
+  /// this is always false whatever was stored.
+  bool get forSchools =>
+      (_prefs.getBool(_kSchools) ?? false) && goal.hasSchoolsVersion;
+
+  /// Switching to for Schools from C1 moves the goal to B2, the highest exam
+  /// with a for Schools version, rather than offering an exam that does not
+  /// exist.
+  Future<void> setForSchools(bool value) async {
+    await _prefs.setBool(_kSchools, value);
+    if (value && !goal.hasSchoolsVersion) {
+      await setGoal(ExamLevel.b2);
+    }
+    notifyListeners();
   }
 
   // ── Mock tests ─────────────────────────────────────────────────────────────
@@ -339,6 +364,7 @@ class AppState extends ChangeNotifier {
       'cil': 1,
       'saved': DateTime.now().toIso8601String(),
       'goal': goal.name,
+      'forSchools': forSchools,
       'profile': profile.toJson(),
       'dailyPractice': _dailyPractice,
       'attempts': _intentos.map((i) => i.toJson()).toList(),
@@ -401,6 +427,10 @@ class AppState extends ChangeNotifier {
     // Notification permission belongs to this device, not to a backup.
     await cancelLocalReminder();
     if (meta.isNotEmpty) await setGoal(meta.first);
+    // Una copia antigua no trae el campo: se queda el modo que ya había.
+    if (datos['forSchools'] is bool) {
+      await setForSchools(datos['forSchools'] as bool);
+    }
     await saveProfile(LearnerProfile.fromJson(datos['profile']));
     _dailyPractice = _readDaily(jsonEncode(datos['dailyPractice'] ?? {}));
     await _prefs.setString(_kDailyPractice, jsonEncode(_dailyPractice));

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../cambridge.dart';
 import '../disposicion.dart';
 
+import '../schools.dart';
 import '../speaking_data.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
@@ -22,23 +23,30 @@ import 'recorder.dart';
 /// same list without the bar is [SpeakingBody], which is what the Speaking tab
 /// shows.
 class SpeakingScreen extends StatelessWidget {
-  const SpeakingScreen({super.key, required this.level});
+  const SpeakingScreen({super.key, required this.level, this.schools = false});
 
   final ExamLevel level;
+  final bool schools;
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Speaking practice')),
-    body: SpeakingBody(level: level),
+    body: SpeakingBody(level: level, schools: schools),
   );
 }
 
 class SpeakingBody extends StatefulWidget {
-  const SpeakingBody({super.key, required this.level});
+  const SpeakingBody({super.key, required this.level, this.schools = false});
 
   /// Part 2 is a different task at B1 — one photograph to describe, not two
   /// to compare — so the level decides which parts are shown.
   final ExamLevel level;
+
+  /// The for Schools tests: same parts and clocks, questions for teenagers.
+  /// Ignored at C1, which has no for Schools version.
+  final bool schools;
+
+  bool get _adaptado => schools && level.hasSchoolsVersion;
 
   @override
   State<SpeakingBody> createState() => _SpeakingBodyState();
@@ -48,7 +56,8 @@ class _SpeakingBodyState extends State<SpeakingBody> {
   final _azar = Random();
   late int _test;
 
-  List<SpeakingTest> get _tests => speakingTestsFor(widget.level);
+  List<SpeakingTest> get _tests =>
+      speakingTestsFor(widget.level, schools: widget.schools);
 
   @override
   void initState() {
@@ -61,7 +70,10 @@ class _SpeakingBodyState extends State<SpeakingBody> {
     super.didUpdateWidget(anterior);
     // B2 tiene más tests que los otros dos niveles: el número de antes puede
     // no existir en el nuevo.
-    if (anterior.level != widget.level) _test = _azar.nextInt(_tests.length);
+    // Lo mismo al pasar de General a for Schools: son otros tests.
+    if (anterior.level != widget.level || anterior.schools != widget.schools) {
+      _test = _azar.nextInt(_tests.length);
+    }
   }
 
   /// Otro distinto del que hay: pulsar "otro" y que salga el mismo parece un
@@ -110,6 +122,8 @@ class _SpeakingBodyState extends State<SpeakingBody> {
               _Selector(
                 numero: _test + 1,
                 de: _tests.length,
+                examen: widget.level.examName(schools: widget._adaptado),
+                schools: widget._adaptado,
                 onOtro: _otroTest,
               ),
             ],
@@ -122,7 +136,9 @@ class _SpeakingBodyState extends State<SpeakingBody> {
               // La clave lleva el nivel y el test: otro test es otra tarea, y
               // no debe heredar el reloj a medias del anterior.
               _TarjetaParte(
-                key: ValueKey('${widget.level.name}-$_test-${p.number}'),
+                key: ValueKey(
+                  '${widget.level.name}-${widget._adaptado}-$_test-${p.number}',
+                ),
                 part: p,
                 test: test,
               ),
@@ -148,11 +164,17 @@ class _Selector extends StatelessWidget {
   const _Selector({
     required this.numero,
     required this.de,
+    required this.examen,
+    required this.schools,
     required this.onOtro,
   });
 
   final int numero;
   final int de;
+
+  /// 'B2 First for Schools': which exam these tests are written for.
+  final String examen;
+  final bool schools;
   final VoidCallback onOtro;
 
   @override
@@ -167,14 +189,26 @@ class _Selector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Test $numero of $de',
-            style: theme.textTheme.titleSmall?.copyWith(color: color),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                'Test $numero of $de',
+                style: theme.textTheme.titleSmall?.copyWith(color: color),
+              ),
+              if (schools) const AudiencePill(schools: true),
+            ],
           ),
           const SizedBox(height: 2),
           Text(
-            'All four parts change together. Part 4 follows the topic of '
-            'Part 3, as in the exam.',
+            schools
+                ? 'Written for $examen: school, friends, hobbies and family. '
+                      'All four parts change together, and Part 4 follows '
+                      'the topic of Part 3.'
+                : 'All four parts change together. Part 4 follows the topic '
+                      'of Part 3, as in the exam.',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,

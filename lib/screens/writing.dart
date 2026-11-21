@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import '../cambridge.dart';
 import '../brand.dart';
 import '../cambridge_theme.dart';
+import '../schools.dart';
 import '../state.dart';
 import '../widgets.dart';
 import '../writing_data.dart';
@@ -26,26 +27,43 @@ import 'writing_feedback.dart';
 /// shows — there the app's own header is already on screen and a second one
 /// under it would only take room.
 class WritingScreen extends StatelessWidget {
-  const WritingScreen({super.key, required this.level});
+  const WritingScreen({super.key, required this.level, this.schools = false});
 
   final ExamLevel level;
+  final bool schools;
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text('Writing · ${level.name}')),
-    body: WritingBody(level: level),
+    appBar: AppBar(
+      title: Text('Writing · ${level.examName(schools: schools)}'),
+    ),
+    body: WritingBody(level: level, schools: schools),
   );
 }
 
 class WritingBody extends StatelessWidget {
-  const WritingBody({super.key, required this.level});
+  const WritingBody({super.key, required this.level, this.schools = false});
 
   final ExamLevel level;
+
+  /// for Schools mode. Ignored at C1, which has no for Schools version.
+  final bool schools;
+
+  bool get _adaptado => schools && level.hasSchoolsVersion;
+
+  /// Lo que cambia en Writing con for Schools, que solo es la lista de B2.
+  String get _notaSchools => level == ExamLevel.b2
+      ? 'B2 First for Schools: Part 2 can be a story, and never a report, so '
+            'reports are not shown. Tasks marked General were written for '
+            'the general exam: same format, adult topics.'
+      : 'B1 Preliminary for Schools sets the same tasks as the general exam. '
+            'Tasks marked General were written for it: same format, adult '
+            'topics.';
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tasks = writingTasksFor(level);
+    final tasks = writingTasksFor(level, schools: schools);
 
     return Pagina(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -68,6 +86,20 @@ class WritingBody extends StatelessWidget {
             ),
           ),
         ),
+        if (_adaptado)
+          Centrado(
+            ancho: anchoLectura,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _notaSchools,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.45,
+                ),
+              ),
+            ),
+          ),
         Seccion(
           titulo: TituloMarcado(
             'Part 1 · compulsory',
@@ -75,7 +107,7 @@ class WritingBody extends StatelessWidget {
           ),
           children: [
             for (final t in tasks.where((t) => t.isCompulsory))
-              _TaskRow(task: t),
+              _TaskRow(task: t, schools: _adaptado),
           ],
         ),
         Seccion(
@@ -85,7 +117,7 @@ class WritingBody extends StatelessWidget {
           ),
           children: [
             for (final t in tasks.where((t) => !t.isCompulsory))
-              _TaskRow(task: t),
+              _TaskRow(task: t, schools: _adaptado),
           ],
         ),
       ],
@@ -94,9 +126,12 @@ class WritingBody extends StatelessWidget {
 }
 
 class _TaskRow extends StatelessWidget {
-  const _TaskRow({required this.task});
+  const _TaskRow({required this.task, this.schools = false});
 
   final WritingTask task;
+
+  /// En modo for Schools cada tarea dice para qué examen se escribió.
+  final bool schools;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +150,15 @@ class _TaskRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(task.kind.label, style: theme.textTheme.titleSmall),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(task.kind.label, style: theme.textTheme.titleSmall),
+                    if (schools) AudiencePill(schools: task.forSchools),
+                  ],
+                ),
                 const SizedBox(height: 3),
                 Text(
                   task.title ?? task.question,

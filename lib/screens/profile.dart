@@ -60,7 +60,7 @@ class GoalCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Working towards ${state.goal.name}',
+              'Working towards ${state.goal.examName(schools: state.forSchools)}',
               style: theme.textTheme.titleSmall,
             ),
             if (profile.reason.isNotEmpty) ...[

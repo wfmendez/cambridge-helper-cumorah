@@ -88,6 +88,100 @@ const List<Criterion> writingCriteria = [
 
 const Map<String, WritingModel> writingModels = {
   ...extraWritingModels,
+  // ── for Schools ─────────────────────────────────────────────────────────
+  'b1s-p1-exchange': WritingModel(
+    text:
+        'Hi Jo,\n\n'
+        'I’m so happy you’re coming! On Monday and Wednesday you’ll come to '
+        'my English and science lessons. Science is fun because we do '
+        'experiments in the lab.\n\n'
+        'We don’t have a uniform, so just wear jeans and a T-shirt. Bring '
+        'trainers for PE on Thursday.\n\n'
+        'After school, why don’t we go to the skate park? My friends meet '
+        'there every afternoon and they really want to meet you.\n\n'
+        'Don’t worry about the language. Lots of students speak some English, '
+        'and I’ll be with you all the time. Just smile and say hello!\n\n'
+        'See you soon,\nMarta',
+    why: [
+      'Each of the four notes has its own short paragraph, so none is missed.',
+      'The suggestion comes with a reason: the friends want to meet Jo.',
+      'Contractions, “why don’t we…?” and an exclamation keep it friendly.',
+    ],
+  ),
+  'b1s-p2-story': WritingModel(
+    text:
+        'The bell rang, but our teacher still had not arrived. Mr Ward was '
+        'never late, so we started to worry.\n\n'
+        'After ten minutes, Leo went to look for him. He came back laughing. '
+        '“He’s stuck in the lift!” he said.\n\n'
+        'We all ran to the end of the corridor. Through the small window in '
+        'the lift door, we could see Mr Ward. He was holding our maths tests '
+        'and smiling.\n\n'
+        'The caretaker opened the door twenty minutes later. By then the '
+        'lesson was nearly over, so the test had to wait until Friday. Nobody '
+        'complained!',
+    why: [
+      'The given sentence opens the story exactly as printed.',
+      'A problem, a discovery and an ending, in four short paragraphs.',
+      'Past simple for the events, past continuous for the scene, and one '
+          'line of direct speech to bring it to life.',
+    ],
+  ),
+  'b2s-p1-phones': WritingModel(
+    text:
+        'Most teenagers carry a smartphone everywhere, so every school has to '
+        'decide whether these devices belong in the school day. In my view, '
+        'they should be allowed, but only under clear rules.\n\n'
+        'As far as learning is concerned, a phone can be a useful tool. '
+        'Students can check a word in an online dictionary, photograph the '
+        'board or revise with a quiz app. However, the same device can '
+        'distract them with messages and games, so it should only come out '
+        'when the teacher says so.\n\n'
+        'Break time is a different matter. If everyone is staring at a '
+        'screen, nobody talks or plays football, and friendships suffer. For '
+        'this reason, I think phones should stay in bags between lessons.\n\n'
+        'What is more, there is the question of safety. Many parents feel '
+        'calmer knowing that their children can contact them on the way '
+        'home.\n\n'
+        'To sum up, banning phones completely is unrealistic, but allowing '
+        'them everywhere is unwise. Sensible rules for lessons and breaks are '
+        'the best answer.',
+    why: [
+      'Both notes get a paragraph, and safety supplies the “own idea”.',
+      'The opinion is in the first paragraph and the conclusion repeats it, '
+          'so the reader never has to guess.',
+      'Each paragraph opens with a signpost — “As far as learning is '
+          'concerned”, “Break time is a different matter” — instead of '
+          '“firstly, secondly”.',
+    ],
+  ),
+  'b2s-p2-story': WritingModel(
+    text:
+        'As soon as the bus pulled away, Sara realised that her phone was '
+        'still on the seat. Her bus pass, her photos, her friends’ numbers — '
+        'everything was inside it.\n\n'
+        'She started running, but the bus had already turned the corner. Out '
+        'of breath, she sat down on a wall, wondering how she would explain '
+        'this to her parents.\n\n'
+        'Ten minutes later, a tall man on a bicycle stopped beside her. He was '
+        'wearing a driver’s uniform and holding something in his hand.\n\n'
+        '“Is this yours?” he asked. “I saw you running after my bus. My shift '
+        'had just finished, so I thought I’d bring it back.”\n\n'
+        'Sara could hardly believe it. She had never thanked a stranger so '
+        'warmly in her life. He simply smiled and cycled away.\n\n'
+        'The real surprise came the following week. At the school '
+        'prize-giving, the guest who handed out the awards was the same man — '
+        'and he winked at her as she walked onto the stage.',
+    why: [
+      'The opening sentence is copied exactly, and both required things '
+          'appear: the stranger is the driver, the surprise is the ending.',
+      'Past perfect (“had already turned”, “had just finished”) sits beside '
+          'past simple and continuous — the range the Language mark looks '
+          'for.',
+      'The ending is saved for the last paragraph, so the story builds '
+          'instead of stopping.',
+    ],
+  ),
   'b1-p1-weekend': WritingModel(
     text:
         'Hi Alex,\n\n'
