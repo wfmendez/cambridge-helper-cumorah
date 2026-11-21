@@ -389,5 +389,82 @@
       "Write 220–260 words."
     ],
     "wordTarget": "220–260 words"
+  },
+  "b1s-p1-exchange": {
+    "level": "B1",
+    "kind": "Email or letter",
+    "part": 1,
+    "instructions": "Read this email from your English friend Jo, who is coming to your school for a week on an exchange:\n\n“I can’t wait to come to your school! Which lessons will I go to with you? What should I wear? What can we do after school? I’m a bit nervous because I don’t speak your language — any advice?”",
+    "question": "Write your email to Jo, using all the notes.",
+    "notes": [
+      "Tell Jo about the lessons.",
+      "Say what to wear.",
+      "Suggest something to do after school.",
+      "Give Jo some advice."
+    ],
+    "register": "Friendly and informal.",
+    "checklist": [
+      "Reply to all four points.",
+      "Give a reason for your suggestion.",
+      "Use a greeting and a friendly ending.",
+      "Write about 100 words."
+    ],
+    "wordTarget": "about 100 words"
+  },
+  "b1s-p2-story": {
+    "level": "B1",
+    "kind": "Story",
+    "part": 2,
+    "instructions": "Your English teacher has asked you to write a story. Your story must begin with this sentence:",
+    "question": "The bell rang, but our teacher still had not arrived.",
+    "notes": [],
+    "register": "A clear, engaging story for your teacher.",
+    "checklist": [
+      "Use the given sentence as your opening.",
+      "Use past tenses: what happened, and what was happening.",
+      "Give the story a beginning, a problem and an ending.",
+      "Write about 100 words."
+    ],
+    "wordTarget": "about 100 words"
+  },
+  "b2s-p1-phones": {
+    "level": "B2",
+    "kind": "Essay",
+    "part": 1,
+    "instructions": "In your English class you have been talking about technology at school. Now your English teacher has asked you to write an essay.",
+    "question": "Should students be allowed to use their mobile phones during the school day?",
+    "notes": [
+      "learning in lessons",
+      "friendships at break time",
+      "(your own idea)"
+    ],
+    "register": "Neutral. A clear opinion, no slang.",
+    "checklist": [
+      "All three notes covered, including your own idea.",
+      "A clear position, stated early and held to the end.",
+      "Linking that balances the arguments: however, what is more, for this reason.",
+      "140–190 words."
+    ],
+    "wordTarget": "140–190 words"
+  },
+  "b2s-p2-story": {
+    "level": "B2",
+    "kind": "Story",
+    "part": 2,
+    "instructions": "You have seen this announcement in an English-language magazine for teenagers:\n\n“Stories wanted! Write a story for our competition. Your story must begin with the sentence below and include the two things listed.”",
+    "question": "As soon as the bus pulled away, Sara realised that her phone was still on the seat.",
+    "notes": [
+      "a stranger",
+      "a surprise"
+    ],
+    "register": "An engaging story for teenage readers.",
+    "checklist": [
+      "Begin with the given sentence, word for word.",
+      "Include both things from the list.",
+      "Mix narrative tenses: past simple, past continuous, past perfect.",
+      "Build to a real ending instead of just stopping.",
+      "140–190 words."
+    ],
+    "wordTarget": "140–190 words"
   }
 }
