@@ -159,8 +159,9 @@ void main() {
   test(
     'new writing tasks have complete models within the actual word targets',
     () {
-      expect(writingTasks.length, 22);
-      expect(writingTasks.map((task) => task.id).toSet().length, 22);
+      // 22 para el examen general y 4 para for Schools.
+      expect(writingTasks.length, 26);
+      expect(writingTasks.map((task) => task.id).toSet().length, 26);
       expect(extraWritingTasks.length, 8);
       for (final task in extraWritingTasks) {
         final model = writingModels[task.id]!;

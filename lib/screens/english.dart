@@ -12,6 +12,7 @@ import '../brand.dart';
 import '../cambridge_guide.dart';
 import '../state.dart';
 import '../practice.dart';
+import '../schools.dart';
 import '../theme.dart';
 import '../cambridge_theme.dart';
 import '../widgets.dart';
@@ -136,8 +137,14 @@ class _EnglishScreenState extends State<EnglishScreen>
                           children: [
                             for (final (index, page) in <Widget>[
                               const _Practica(),
-                              WritingBody(level: state.goal),
-                              SpeakingBody(level: state.goal),
+                              WritingBody(
+                                level: state.goal,
+                                schools: state.forSchools,
+                              ),
+                              SpeakingBody(
+                                level: state.goal,
+                                schools: state.forSchools,
+                              ),
                               const _Simulacros(),
                               const ProgressTab(),
                             ].indexed)
@@ -270,12 +277,83 @@ class _GoalPicker extends StatelessWidget {
           ),
         ),
         for (final level in ExamLevel.values)
-          _GoalChip(
-            level: level,
-            selected: state.goal == level,
-            onTap: () => state.setGoal(level),
+          // En modo for Schools no se ofrece C1: ese examen no existe.
+          if (!state.forSchools || level.hasSchoolsVersion)
+            _GoalChip(
+              level: level,
+              selected: state.goal == level,
+              onTap: () => state.setGoal(level),
+            ),
+        // La explicación larga va en Practice: aquí, con el texto grande,
+        // una línea más en la cabecera le quita sitio a todas las pestañas.
+        Tooltip(
+          message: schoolsSummary,
+          child: _VersionSwitch(
+            schools: state.forSchools,
+            onChanged: state.setForSchools,
           ),
+        ),
       ],
+    );
+  }
+}
+
+/// General or for Schools: two segments, one always selected.
+///
+/// Hecho a mano y no con SegmentedButton: aquel mide 40 de alto y aquí, junto a
+/// los chips de la meta, descuadraba la fila en el móvil.
+class _VersionSwitch extends StatelessWidget {
+  const _VersionSwitch({required this.schools, required this.onChanged});
+
+  final bool schools;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colour = cambridgeReadable(schoolsColour, theme.colorScheme);
+
+    Widget segment(String label, bool value) {
+      final selected = schools == value;
+      return Semantics(
+        button: true,
+        selected: selected,
+        child: InkWell(
+          onTap: selected ? null : () => onChanged(value),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: selected ? colour.withValues(alpha: 0.16) : null,
+            ),
+            child: Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected ? colour : theme.colorScheme.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        // Flexible: con el texto muy grande cada mitad parte su rótulo en
+        // dos líneas en vez de desbordar la cabecera.
+        children: [
+          Flexible(child: segment('General', false)),
+          Flexible(child: segment('for Schools', true)),
+        ],
+      ),
     );
   }
 }
@@ -339,6 +417,10 @@ class _Practica extends StatelessWidget {
       children: [
         const GoalCard(),
         const SizedBox(height: 16),
+        if (state.forSchools) ...[
+          SchoolsModeCard(level: state.goal),
+          const SizedBox(height: 12),
+        ],
         Rejilla(
           espacioFinal: false,
           children: [
@@ -1125,7 +1207,10 @@ class _SimulacrosState extends State<_Simulacros> {
           TextButton.icon(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => WritingScreen(level: AppScope.of(context).goal),
+                builder: (_) => WritingScreen(
+                  level: AppScope.of(context).goal,
+                  schools: AppScope.of(context).forSchools,
+                ),
               ),
             ),
             icon: const Icon(Icons.edit_note),
@@ -1187,6 +1272,19 @@ class _SimulacrosState extends State<_Simulacros> {
           'Choose a paper, set aside the time, and work through it as you '
           'would in the exam.',
         ),
+        if (state.forSchools) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: anchoLectura),
+              child: GeneralMaterialNote(
+                level: state.goal,
+                what: 'These Reading and Use of English papers',
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 32),
         _CabeceraSimulacros(
           titulo: 'Written for Cíl',
@@ -1289,6 +1387,14 @@ class _SimulacrosState extends State<_Simulacros> {
             ),
           ),
         ),
+        if (state.forSchools)
+          Centrado(
+            ancho: anchoLectura,
+            child: GeneralMaterialNote(
+              level: state.goal,
+              what: 'These Reading and Use of English papers',
+            ),
+          ),
         Seccion(
           titulo: // Las dos categorías van en verde y en rojo: es la distinción que más
               // importa de esta pantalla — si puedes sentarte a hacerlo aquí o
@@ -1499,9 +1605,11 @@ class _FilaPrueba extends StatelessWidget {
           builder: (_) => switch (paper.id) {
             final id when id.contains('writing') => WritingScreen(
               level: paper.level,
+              schools: state.forSchools,
             ),
             final id when id.contains('speaking') => SpeakingScreen(
               level: paper.level,
+              schools: state.forSchools,
             ),
             _ => _HojaRespuestas(paper: paper),
           },

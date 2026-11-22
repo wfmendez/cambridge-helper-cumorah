@@ -38,9 +38,14 @@ class WritingTask {
     this.notes = const [],
     this.register,
     this.title,
+    this.forSchools = false,
   });
 
   final String id;
+
+  /// Written for the for Schools exam: a teenager's topic and reader. The
+  /// rest are written for the general exam.
+  final bool forSchools;
   final String? title;
   final ExamLevel level;
 
@@ -393,7 +398,137 @@ final List<WritingTask> writingTasks = [
     ],
   ),
   ...extraWritingTasks,
+  ...schoolsWritingTasks,
 ];
 
-List<WritingTask> writingTasksFor(ExamLevel level) =>
-    writingTasks.where((t) => t.level == level).toList();
+/// Whether this text type can be set in this version of the exam.
+///
+/// Only B2 differs: B2 First for Schools can ask for a story and never a
+/// report; B2 First can ask for a report and never a story. At B1 both
+/// versions offer an article or a story, and C1 has no for Schools version.
+bool textTypeInExam(ExamLevel level, TextType kind, {required bool schools}) {
+  if (level != ExamLevel.b2) return true;
+  return schools ? kind != TextType.report : kind != TextType.story;
+}
+
+/// The tasks for a level. In for Schools mode the for Schools tasks come
+/// first, then the general ones whose text type that exam also sets: the
+/// format is the same, and an honest "General" label is better than less
+/// practice. The general mode never shows for Schools tasks.
+List<WritingTask> writingTasksFor(ExamLevel level, {bool schools = false}) {
+  final adaptado = schools && level.hasSchoolsVersion;
+  final delNivel = writingTasks.where(
+    (t) => t.level == level && textTypeInExam(level, t.kind, schools: adaptado),
+  );
+  return adaptado
+      ? [
+          ...delNivel.where((t) => t.forSchools),
+          ...delNivel.where((t) => !t.forSchools),
+        ]
+      : delNivel.where((t) => !t.forSchools).toList();
+}
+
+/// Written for B1 Preliminary for Schools and B2 First for Schools: school,
+/// friends and free time, with a teacher, a classmate or a teen magazine as
+/// the reader.
+const List<WritingTask> schoolsWritingTasks = [
+  WritingTask(
+    id: 'b1s-p1-exchange',
+    level: ExamLevel.b1,
+    part: 1,
+    kind: TextType.email,
+    title: 'A week at your school',
+    forSchools: true,
+    instructions:
+        'Read this email from your English friend Jo, who is coming to your '
+        'school for a week on an exchange:\n\n'
+        '“I can’t wait to come to your school! Which lessons will I go to '
+        'with you? What should I wear? What can we do after school? I’m a bit '
+        'nervous because I don’t speak your language — any advice?”',
+    question: 'Write your email to Jo, using all the notes.',
+    notes: [
+      'Tell Jo about the lessons.',
+      'Say what to wear.',
+      'Suggest something to do after school.',
+      'Give Jo some advice.',
+    ],
+    register: 'Friendly and informal.',
+    checklist: [
+      'Reply to all four points.',
+      'Give a reason for your suggestion.',
+      'Use a greeting and a friendly ending.',
+      'Write about 100 words.',
+    ],
+  ),
+  WritingTask(
+    id: 'b1s-p2-story',
+    level: ExamLevel.b1,
+    part: 2,
+    kind: TextType.story,
+    title: 'The teacher who did not arrive',
+    forSchools: true,
+    instructions:
+        'Your English teacher has asked you to write a story. '
+        'Your story must begin with this sentence:',
+    question: 'The bell rang, but our teacher still had not arrived.',
+    register: 'A clear, engaging story for your teacher.',
+    checklist: [
+      'Use the given sentence as your opening.',
+      'Use past tenses: what happened, and what was happening.',
+      'Give the story a beginning, a problem and an ending.',
+      'Write about 100 words.',
+    ],
+  ),
+  WritingTask(
+    id: 'b2s-p1-phones',
+    level: ExamLevel.b2,
+    part: 1,
+    kind: TextType.essay,
+    title: 'Phones at school',
+    forSchools: true,
+    instructions:
+        'In your English class you have been talking about technology at '
+        'school. Now your English teacher has asked you to write an essay.',
+    question:
+        'Should students be allowed to use their mobile phones during the '
+        'school day?',
+    notes: [
+      'learning in lessons',
+      'friendships at break time',
+      '(your own idea)',
+    ],
+    register: 'Neutral. A clear opinion, no slang.',
+    checklist: [
+      'All three notes covered, including your own idea.',
+      'A clear position, stated early and held to the end.',
+      'Linking that balances the arguments: however, what is more, for this '
+          'reason.',
+      '140–190 words.',
+    ],
+  ),
+  WritingTask(
+    id: 'b2s-p2-story',
+    level: ExamLevel.b2,
+    part: 2,
+    kind: TextType.story,
+    title: 'The phone on the bus',
+    forSchools: true,
+    instructions:
+        'You have seen this announcement in an English-language magazine for '
+        'teenagers:\n\n'
+        '“Stories wanted! Write a story for our competition. Your story must '
+        'begin with the sentence below and include the two things listed.”',
+    question:
+        'As soon as the bus pulled away, Sara realised that her phone was '
+        'still on the seat.',
+    notes: ['a stranger', 'a surprise'],
+    register: 'An engaging story for teenage readers.',
+    checklist: [
+      'Begin with the given sentence, word for word.',
+      'Include both things from the list.',
+      'Mix narrative tenses: past simple, past continuous, past perfect.',
+      'Build to a real ending instead of just stopping.',
+      '140–190 words.',
+    ],
+  ),
+];
